@@ -9,7 +9,7 @@ don't know what you're doing, dismantle the state, fight the police.
 ## Limitations
 ACAP25 has only been tested on a USRP B100 but it will likely work for other
 USRP Bus Series SDRs without modification. To add support for your favorite
-SDR implement `TunableSamplesSourceProvider.java' and extend
+SDR implement `TunableSamplesSourceProvider.java` and extend
 `TunableSamplesSource.java`. ACAP25 cannot demodulate C4FM signals, only
 CQPSK for now.
 
