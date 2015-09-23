@@ -1,0 +1,4 @@
+name            : site00
+id              : 0
+rfSubSystem     : 1
+controlChannels : [ 222.22222, 333.33333 ]

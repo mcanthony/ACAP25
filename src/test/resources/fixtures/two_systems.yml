@@ -1,0 +1,28 @@
+- name            : sys00
+  id              : 0
+  wideAreaCommNet : 111111
+  sites           :
+    - name            : site00
+      id              : 0
+      rfSubSystem     : 1
+      controlChannels : [ 222.22222, 333.33333 ]
+    - name            : site01
+      id              : 1
+      rfSubSystem     : 2
+      controlChannels : [ 333.33333, 444.44444 ]
+  talkGroups :
+    - alias : tg00
+      id    : 0
+    - alias : tg01
+      id    : 1
+- name            : sys01
+  id              : 1
+  wideAreaCommNet : 222222
+  sites           :
+    - name            : site02
+      id              : 2
+      rfSubSystem     : 3
+      controlChannels : [ 444.44444, 555.55555 ]
+  talkGroups :
+    - alias : tg02
+      id    : 2

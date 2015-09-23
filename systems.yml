@@ -1,0 +1,28 @@
+- name            : abc
+  id              : 123
+  wideAreaCommNet : 123456
+  sites           :
+    - name            : name00
+      id              : 1
+      rfSubSystem     : 1
+      controlChannels : [ 850.17500, 851.28750 ]
+    - name            : name01
+      id              : 2
+      rfSubSystem     : 2
+      controlChannels : [ 853.11250 ]
+  talkGroups :
+    - alias : individual
+      id    : 0
+    - alias : everything
+      id    : 65535
+- name            : def
+  id              : 456
+  wideAreaCommNet : 456789
+  sites           :
+    - name            : name02
+      id              : 3
+      rfSubSystem     : 3
+      controlChannels : [ 769.13375, 769.67125 ]
+  talkGroups :
+    - alias : something
+      id    : 012
