@@ -17,9 +17,15 @@
 
 package org.anhonesteffort.p25.protocol.frame;
 
+import org.anhonesteffort.p25.ecc.Golay_17_6_8;
 import org.anhonesteffort.p25.util.DiBitByteBufferSink;
+import org.anhonesteffort.p25.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HeaderDataUnit extends DataUnit {
+
+  private static final Logger log = LoggerFactory.getLogger(HeaderDataUnit.class);
 
   private final byte[]  messageIndicator;
   private final int     manufacturerId;
@@ -31,7 +37,20 @@ public class HeaderDataUnit extends DataUnit {
   public HeaderDataUnit(Nid nid, DiBitByteBufferSink sink) {
     super(nid, sink);
 
-    // todo: error correct with golay then RS
+    byte[]       bytes  = sink.getBytes().array();
+    Golay_17_6_8 golay  = new Golay_17_6_8();
+    int          errors = 0;
+
+    for (int i = 0; i < 648; i += 18) {
+      int   codeword18 = Util.bytesToInt(bytes, i, 18);
+      int[] decode     = golay.decode(codeword18 >> 1);
+
+      errors+= decode[0];
+    }
+
+    log.debug("header data word golay error count: " + errors);
+
+    // todo: error correct with RS
     messageIndicator = new byte[0];
     manufacturerId   = 0;
     algorithmId      = 0;

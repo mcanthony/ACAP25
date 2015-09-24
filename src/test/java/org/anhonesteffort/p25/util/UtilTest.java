@@ -19,9 +19,55 @@ package org.anhonesteffort.p25.util;
 
 import org.junit.Test;
 
-import java.util.List;
-
 public class UtilTest {
+
+
+  @Test
+  public void testBytesToInt() {
+    byte[] BYTES00 = new byte[] {0x01};
+
+    assert Util.bytesToInt(BYTES00, 0, 1) == 0;
+    assert Util.bytesToInt(BYTES00, 0, 2) == 0;
+    assert Util.bytesToInt(BYTES00, 0, 3) == 0;
+    assert Util.bytesToInt(BYTES00, 0, 4) == 0;
+    assert Util.bytesToInt(BYTES00, 0, 5) == 0;
+    assert Util.bytesToInt(BYTES00, 0, 6) == 0;
+    assert Util.bytesToInt(BYTES00, 0, 7) == 0;
+    assert Util.bytesToInt(BYTES00, 0, 8) == 1;
+
+    assert Util.bytesToInt(BYTES00, 0, 1) == 0;
+    assert Util.bytesToInt(BYTES00, 7, 1) == 1;
+
+    byte[] BYTES01 = new byte[] {0x01, 0x05};
+
+    assert Util.bytesToInt(BYTES01, 0, 1) == 0;
+    assert Util.bytesToInt(BYTES01, 0, 2) == 0;
+    assert Util.bytesToInt(BYTES01, 0, 3) == 0;
+    assert Util.bytesToInt(BYTES01, 0, 4) == 0;
+    assert Util.bytesToInt(BYTES01, 0, 5) == 0;
+    assert Util.bytesToInt(BYTES01, 0, 6) == 0;
+    assert Util.bytesToInt(BYTES01, 0, 7) == 0;
+    assert Util.bytesToInt(BYTES01, 0, 8) == 1;
+
+    assert Util.bytesToInt(BYTES01, 0, 1) == 0;
+    assert Util.bytesToInt(BYTES01, 7, 1) == 1;
+
+    assert Util.bytesToInt(BYTES01,  8, 1) == 0;
+    assert Util.bytesToInt(BYTES01,  9, 1) == 0;
+    assert Util.bytesToInt(BYTES01, 10, 1) == 0;
+    assert Util.bytesToInt(BYTES01, 11, 1) == 0;
+
+    assert Util.bytesToInt(BYTES01, 12, 1) == 0;
+    assert Util.bytesToInt(BYTES01, 13, 1) == 1;
+    assert Util.bytesToInt(BYTES01, 14, 1) == 0;
+    assert Util.bytesToInt(BYTES01, 15, 1) == 1;
+
+    assert Util.bytesToInt(BYTES01,  8, 8) == 0x05;
+    assert Util.bytesToInt(BYTES01,  8, 4) == 0x00;
+    assert Util.bytesToInt(BYTES01, 12, 4) == 0x05;
+
+    assert Util.bytesToInt(BYTES01,  7, 9) == 0x0105;
+  }
 
   @Test
   public void testBinaryIntArrayToInt() {
@@ -57,17 +103,17 @@ public class UtilTest {
     assert Util.toBinaryIntArray(BYTES00, 0, 8)[6] == 0;
     assert Util.toBinaryIntArray(BYTES00, 0, 8)[7] == 1;
 
-    assert Util.toBinaryIntArray(BYTES00, 8, 12).length == 4;
-    assert Util.toBinaryIntArray(BYTES00, 8, 12)[0] == 0;
-    assert Util.toBinaryIntArray(BYTES00, 8, 12)[1] == 0;
-    assert Util.toBinaryIntArray(BYTES00, 8, 12)[2] == 0;
-    assert Util.toBinaryIntArray(BYTES00, 8, 12)[3] == 0;
+    assert Util.toBinaryIntArray(BYTES00, 8, 4).length == 4;
+    assert Util.toBinaryIntArray(BYTES00, 8, 4)[0] == 0;
+    assert Util.toBinaryIntArray(BYTES00, 8, 4)[1] == 0;
+    assert Util.toBinaryIntArray(BYTES00, 8, 4)[2] == 0;
+    assert Util.toBinaryIntArray(BYTES00, 8, 4)[3] == 0;
 
-    assert Util.toBinaryIntArray(BYTES00, 12, 16).length == 4;
-    assert Util.toBinaryIntArray(BYTES00, 12, 16)[0] == 0;
-    assert Util.toBinaryIntArray(BYTES00, 12, 16)[1] == 0;
-    assert Util.toBinaryIntArray(BYTES00, 12, 16)[2] == 1;
-    assert Util.toBinaryIntArray(BYTES00, 12, 16)[3] == 1;
+    assert Util.toBinaryIntArray(BYTES00, 12, 4).length == 4;
+    assert Util.toBinaryIntArray(BYTES00, 12, 4)[0] == 0;
+    assert Util.toBinaryIntArray(BYTES00, 12, 4)[1] == 0;
+    assert Util.toBinaryIntArray(BYTES00, 12, 4)[2] == 1;
+    assert Util.toBinaryIntArray(BYTES00, 12, 4)[3] == 1;
 
     byte[] BYTES01 = new byte[] {0x01};
 
@@ -90,10 +136,10 @@ public class UtilTest {
     assert Util.toBinaryIntArray(BYTES02, 0, 16)[2] == 0;
     assert Util.toBinaryIntArray(BYTES02, 0, 16)[3] == 0;
 
-    assert Util.toBinaryIntArray(BYTES02, 4, 5)[0] == 0;
-    assert Util.toBinaryIntArray(BYTES02, 5, 6)[0] == 0;
-    assert Util.toBinaryIntArray(BYTES02, 6, 7)[0] == 0;
-    assert Util.toBinaryIntArray(BYTES02, 7, 8)[0] == 1;
+    assert Util.toBinaryIntArray(BYTES02, 4, 1)[0] == 0;
+    assert Util.toBinaryIntArray(BYTES02, 5, 1)[0] == 0;
+    assert Util.toBinaryIntArray(BYTES02, 6, 1)[0] == 0;
+    assert Util.toBinaryIntArray(BYTES02, 7, 1)[0] == 1;
 
     assert Util.toBinaryIntArray(BYTES02, 0, 16)[8]  == 0;
     assert Util.toBinaryIntArray(BYTES02, 0, 16)[9]  == 0;
@@ -102,8 +148,8 @@ public class UtilTest {
 
     assert Util.toBinaryIntArray(BYTES02,  0, 16)[12] == 0;
     assert Util.toBinaryIntArray(BYTES02,  0, 16)[13] == 0;
-    assert Util.toBinaryIntArray(BYTES02, 14, 16)[0]  == 1;
-    assert Util.toBinaryIntArray(BYTES02, 14, 16)[1]  == 0;
+    assert Util.toBinaryIntArray(BYTES02, 14,  2)[0]  == 1;
+    assert Util.toBinaryIntArray(BYTES02, 14,  2)[1]  == 0;
 
     assert Util.toBinaryIntArray(new byte[3], 0, 24).length == 24;
   }

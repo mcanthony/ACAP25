@@ -18,9 +18,6 @@
 package org.anhonesteffort.p25.util;
 
 import java.math.BigInteger;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 
 public class Util {
 
@@ -28,13 +25,33 @@ public class Util {
     return BigInteger.valueOf(a).gcd(BigInteger.valueOf(b)).intValue();
   }
 
-  public static int[] toBinaryIntArray(byte[] bytes, int startBitIndex, int stopBitIndex) {
-    int   bitReadIndex  = startBitIndex;
+  public static int bytesToInt(byte[] bytes, int bitOffset, int bitCount) {
+    int bitReadIndex  = bitOffset;
+    int byteReadIndex = bitReadIndex / 8;
+    int bitWriteCount = 0;
+    int result        = 0;
+
+    while (bitWriteCount < bitCount) {
+      int value       = bytes[byteReadIndex];
+      int bitRelative = bitReadIndex - (8 * byteReadIndex);
+
+      result = Integer.rotateLeft(result, 1) + (Integer.rotateRight(value, 7 - bitRelative) & 0x01);
+
+      bitWriteCount += 1;
+      bitReadIndex  += 1;
+      byteReadIndex  = bitReadIndex / 8;
+    }
+
+    return result;
+  }
+
+  public static int[] toBinaryIntArray(byte[] bytes, int bitOffset, int bitCount) {
+    int   bitReadIndex  = bitOffset;
     int   byteReadIndex = bitReadIndex / 8;
     int   bitWriteIndex = 0;
-    int[] result        = new int[stopBitIndex - startBitIndex];
+    int[] result        = new int[bitCount];
 
-    while (bitReadIndex < stopBitIndex) {
+    while (bitWriteIndex < bitCount) {
       int value       = bytes[byteReadIndex];
       int bitRelative = bitReadIndex - (8 * byteReadIndex);
 
@@ -47,11 +64,11 @@ public class Util {
     return result;
   }
 
-  public static int binaryIntArrayToInt(int[] bits, int offset, int bitCount) {
+  public static int binaryIntArrayToInt(int[] bits, int bitOffset, int bitCount) {
     int result = 0;
 
     for (int bit = 0; bit < bitCount; bit++)
-      result = Integer.rotateLeft(result, 1) + bits[bit + offset];
+      result = Integer.rotateLeft(result, 1) + bits[bit + bitOffset];
 
     return result;
   }
