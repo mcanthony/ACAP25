@@ -17,29 +17,20 @@
 
 package org.anhonesteffort.p25.ecc;
 
-import org.anhonesteffort.p25.protocol.P25;
+public class ReedSolomon_36_20_17 {
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+  private final ReedSolomon_63 rs63;
 
-public class DecoderProvider {
+  public ReedSolomon_36_20_17() {
+    rs63 = new ReedSolomon_63();
+  }
 
-  private static final Map<String, BchDecoder> cache = new HashMap<>();
+  public int decode(int[] coded36) {
+    int[] coded63 = new int[64];
+    for (int i = 0; i < 36; i++)
+      coded63[27 + i] = coded36[i];
 
-  public static BchDecoder bchDecoderFor(int TT) {
-    int    MM         = P25.RS_MM;
-    int[]  polynomial = P25.RS_POLYNOMIAL;
-    String key        = MM + "_" + TT + "_" + Arrays.toString(polynomial);
-
-    BchDecoder decoder = cache.get(key);
-    if (decoder != null)
-      return decoder;
-
-    decoder = BchDecoder.newInstance(MM, TT, polynomial);
-    cache.put(key, decoder);
-
-    return decoder;
+    return rs63.decode(16, 27, coded63);
   }
 
 }

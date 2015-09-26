@@ -25,7 +25,7 @@ package org.anhonesteffort.p25.ecc;
 
 import java.util.stream.IntStream;
 
-public class ReedSolomonDecoder {
+public class BchDecoder {
 
   private final int NN;
   private final int KK;
@@ -34,7 +34,7 @@ public class ReedSolomonDecoder {
   private final int[] alphaTo;
   private final int[] indexOf;
 
-  private ReedSolomonDecoder(int NN, int KK, int TT, int[] alphaTo, int[] indexOf) {
+  private BchDecoder(int NN, int KK, int TT, int[] alphaTo, int[] indexOf) {
     this.NN      = NN;
     this.KK      = KK;
     this.TT      = TT;
@@ -42,12 +42,12 @@ public class ReedSolomonDecoder {
     this.indexOf = indexOf;
   }
 
-  public static ReedSolomonDecoder newInstance(int MM, int TT, int generatorPolynomial[]) {
+  public static BchDecoder newInstance(int MM, int TT, int generatorPolynomial[]) {
     int NN = (int) (Math.pow(2, MM) - 1);
     int KK = NN - 2 * TT;
 
     int[][] golay = generateGolayField(generatorPolynomial, MM, NN);
-    return new ReedSolomonDecoder(NN, KK, TT, golay[0], golay[1]);
+    return new BchDecoder(NN, KK, TT, golay[0], golay[1]);
   }
 
   private static int[][] generateGolayField(int[] polynomial, int MM, int NN) {
@@ -106,7 +106,7 @@ public class ReedSolomonDecoder {
     for (int i = 0; i < NN; i++) {
       reversed[i] = indexOf[input[input.length - 1 - i]];
     }
-        
+
     for (int i = 1; i <= NN - KK; i++) {
       s[i] = 0;
 
@@ -115,7 +115,7 @@ public class ReedSolomonDecoder {
           s[i] ^= alphaTo[(reversed[j] + i * j) % NN];
         }
       }
-            
+
       if (s[i] != 0) {
         syn_error = true;
       }

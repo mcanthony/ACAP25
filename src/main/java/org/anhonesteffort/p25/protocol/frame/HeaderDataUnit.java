@@ -18,6 +18,7 @@
 package org.anhonesteffort.p25.protocol.frame;
 
 import org.anhonesteffort.p25.ecc.Golay_17_6_8;
+import org.anhonesteffort.p25.ecc.ReedSolomon_36_20_17;
 import org.anhonesteffort.p25.util.DiBitByteBufferSink;
 import org.anhonesteffort.p25.util.Util;
 import org.slf4j.Logger;
@@ -37,26 +38,28 @@ public class HeaderDataUnit extends DataUnit {
   public HeaderDataUnit(Nid nid, DiBitByteBufferSink sink) {
     super(nid, sink);
 
-    byte[]       bytes  = sink.getBytes().array();
-    Golay_17_6_8 golay  = new Golay_17_6_8();
-    int          errors = 0;
+    Golay_17_6_8 golay    = new Golay_17_6_8();
+    byte[]       bytes    = sink.getBytes().array();
+    int[]        hexBits  = new int[36];
+    int          hexCount = 0;
 
     for (int i = 0; i < 648; i += 18) {
-      int   codeword18 = Util.bytesToInt(bytes, i, 18);
-      int[] decode     = golay.decode(codeword18 >> 1);
-
-      errors+= decode[0];
+      int   codeword18    = Util.bytesToInt(bytes, i, 18);
+      int[] decoded       = golay.decode(codeword18 >> 1);
+      hexBits[hexCount++] = decoded[1];
     }
 
-    log.debug("header data word golay error count: " + errors);
+    ReedSolomon_36_20_17 reedSolomon = new ReedSolomon_36_20_17();
+    int                  rsResult    = reedSolomon.decode(hexBits);
 
-    // todo: error correct with RS
     messageIndicator = new byte[0];
-    manufacturerId   = 0;
-    algorithmId      = 0;
-    keyId            = 0;
-    talkGroupId      = 0;
-    intact           = false;
+    manufacturerId   = hexBits[12] * 4 + (hexBits[13] >> 4);
+    algorithmId      = (hexBits[13] & 15) * 16 + (hexBits[14] >> 2);
+    keyId            = (hexBits[14] & 3) * 16384 + hexBits[15] * 256 + hexBits[16] * 4 + (hexBits[17] >> 4);
+    talkGroupId      = (hexBits[17] & 15) * 4096 + hexBits[18] * 64 + hexBits[19];
+    intact           = rsResult >= 0;
+
+    log.debug("decoded to: " + toString());
   }
 
   private HeaderDataUnit(Nid                 nid,
