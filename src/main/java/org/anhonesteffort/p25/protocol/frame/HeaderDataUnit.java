@@ -45,18 +45,18 @@ public class HeaderDataUnit extends DataUnit {
 
     for (int i = 0; i < 648; i += 18) {
       int   codeword18    = Util.bytesToInt(bytes, i, 18);
-      int[] decoded       = golay.decode(codeword18 >> 1);
-      hexBits[hexCount++] = decoded[1];
+      int[] golayResult   = golay.decode(codeword18 >> 1);
+      hexBits[hexCount++] = golayResult[1];
     }
 
     ReedSolomon_36_20_17 reedSolomon = new ReedSolomon_36_20_17();
     int                  rsResult    = reedSolomon.decode(hexBits);
 
     messageIndicator = new byte[0];
-    manufacturerId   = hexBits[12] * 4 + (hexBits[13] >> 4);
-    algorithmId      = (hexBits[13] & 15) * 16 + (hexBits[14] >> 2);
-    keyId            = (hexBits[14] & 3) * 16384 + hexBits[15] * 256 + hexBits[16] * 4 + (hexBits[17] >> 4);
-    talkGroupId      = (hexBits[17] & 15) * 4096 + hexBits[18] * 64 + hexBits[19];
+    manufacturerId   = (hexBits[12] << 2) + (hexBits[13] >> 4);
+    algorithmId      = ((hexBits[13] & 0x0F) << 4) + (hexBits[14] >> 2);
+    keyId            = ((hexBits[14] & 0x03) << 14) + (hexBits[15] << 8) + (hexBits[16] << 2) + (hexBits[17] >> 4);
+    talkGroupId      = ((hexBits[17] & 0x0F) << 12) + (hexBits[18] << 6) + hexBits[19];
     intact           = rsResult >= 0;
 
     log.debug("decoded to: " + toString());
