@@ -17,25 +17,25 @@
 
 package org.anhonesteffort.p25.ecc;
 
-public class ReedSolomon_36_20_17 {
+public class ReedSolomon_24_16_9 {
 
   private final ReedSolomon_63 rs63;
 
-  public ReedSolomon_36_20_17() {
+  public ReedSolomon_24_16_9() {
     rs63 = new ReedSolomon_63();
   }
 
-  public int decode(int[] coded36) {
-    assert coded36.length == 36;
+  public int decode(int[] coded24) {
+    assert coded24.length == 24;
 
     int[] coded63 = new int[63];
-    for (int i = 0; i < 36; i++)
-      coded63[27 + i] = coded36[i];
+    for (int i = 0; i < 24; i++)
+      coded63[39 + i] = coded24[i];
 
-    int result = rs63.decode(16, 27, coded63);
+    int result = rs63.decode(8, 39, coded63);
 
-    for (int i = 0; i < 36; i++)
-      coded36[i] = coded63[27 + i];
+    for (int i = 0; i < 24; i++)
+      coded24[i] = coded63[39 + i];
 
     return result;
   }

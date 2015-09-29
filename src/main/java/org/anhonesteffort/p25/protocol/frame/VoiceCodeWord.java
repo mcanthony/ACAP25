@@ -15,29 +15,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.anhonesteffort.p25.ecc;
+package org.anhonesteffort.p25.protocol.frame;
 
-public class ReedSolomon_36_20_17 {
+public class VoiceCodeWord {
 
-  private final ReedSolomon_63 rs63;
+  private final byte[] voice;
+  private final byte[] parity;
 
-  public ReedSolomon_36_20_17() {
-    rs63 = new ReedSolomon_63();
+  public VoiceCodeWord(byte[] voice, byte[] parity) {
+    this.voice  = voice;
+    this.parity = parity;
   }
 
-  public int decode(int[] coded36) {
-    assert coded36.length == 36;
-
-    int[] coded63 = new int[63];
-    for (int i = 0; i < 36; i++)
-      coded63[27 + i] = coded36[i];
-
-    int result = rs63.decode(16, 27, coded63);
-
-    for (int i = 0; i < 36; i++)
-      coded36[i] = coded63[27 + i];
-
-    return result;
-  }
 
 }

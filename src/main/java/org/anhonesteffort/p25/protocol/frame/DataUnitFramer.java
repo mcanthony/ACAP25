@@ -122,18 +122,23 @@ public class DataUnitFramer extends Source<DataUnit, Sink<DataUnit>> implements 
     switch (dataUnit.getNid().getDuid().getId()) {
       case Duid.ID_HEADER:
         broadcast(new HeaderDataUnit(dataUnit.getNid(), dataUnit.sink));
+        break;
 
       case Duid.ID_TERMINATOR_WO_LINK:
         broadcast(new SimpleTerminatorDataUnit(dataUnit.getNid(), dataUnit.sink));
+        break;
 
       case Duid.ID_LLDU1:
         broadcast(new LogicalLinkDataUnit1(dataUnit.getNid(), dataUnit.sink));
+        break;
 
       case Duid.ID_LLDU2:
         broadcast(new LogicalLinkDataUnit2(dataUnit.getNid(), dataUnit.sink));
+        break;
 
       case Duid.ID_TERMINATOR_W_LINK:
         broadcast(new LinkControlWordTerminatorDataUnit(dataUnit.getNid(), dataUnit.sink));
+        break;
 
       default:
         broadcast(dataUnit);

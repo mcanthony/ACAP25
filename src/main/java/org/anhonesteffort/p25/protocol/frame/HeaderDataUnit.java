@@ -118,7 +118,8 @@ public class HeaderDataUnit extends DataUnit {
     return "[nid: "   + nid.toString() + ", " +
            "intact: " + intact         + ", " +
            "alg: "    + algorithmId    + ", " +
-           "tgid: "   + talkGroupId    + "] ";
+           "tgid: "   + talkGroupId    + ", " +
+           "mfid: "   + manufacturerId + "]";
   }
 
 }
