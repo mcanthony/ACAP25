@@ -19,12 +19,8 @@ package org.anhonesteffort.p25.protocol.frame;
 
 import org.anhonesteffort.p25.ecc.ReedSolomon_24_16_9;
 import org.anhonesteffort.p25.util.DiBitByteBufferSink;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class LogicalLinkDataUnit2 extends LogicalLinkDataUnit {
-
-  private static final Logger log = LoggerFactory.getLogger(LogicalLinkDataUnit2.class);
 
   private final byte[]          messageIndicator;
   private final int             algorithmId;
@@ -41,8 +37,6 @@ public class LogicalLinkDataUnit2 extends LogicalLinkDataUnit {
     algorithmId      = (rsHexbits24[12] << 2) + (rsHexbits24[13] >> 4);
     keyId            = ((rsHexbits24[13] & 0x0F) << 12) + (rsHexbits24[14] << 6) + rsHexbits24[15];
     intact           = rsResult >= 0;
-
-    log.debug("decoded to: " + toString());
   }
 
   private LogicalLinkDataUnit2(Nid                 nid,

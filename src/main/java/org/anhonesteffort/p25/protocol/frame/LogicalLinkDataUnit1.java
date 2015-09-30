@@ -21,12 +21,8 @@ import org.anhonesteffort.p25.ecc.ReedSolomon_24_12_13;
 import org.anhonesteffort.p25.protocol.frame.linkcontrol.LinkControlWord;
 import org.anhonesteffort.p25.protocol.frame.linkcontrol.LinkControlWordFactory;
 import org.anhonesteffort.p25.util.DiBitByteBufferSink;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class LogicalLinkDataUnit1 extends LogicalLinkDataUnit {
-
-  private static final Logger log = LoggerFactory.getLogger(LogicalLinkDataUnit1.class);
 
   private final LinkControlWord linkControlWord;
   private final boolean         intact;
@@ -39,8 +35,6 @@ public class LogicalLinkDataUnit1 extends LogicalLinkDataUnit {
 
     linkControlWord = new LinkControlWordFactory().getLinkControlFor(rsHexbits24);
     intact          = rsResult >= 0;
-
-    log.debug("decoded to: " + toString());
   }
 
   private LogicalLinkDataUnit1(Nid                 nid,

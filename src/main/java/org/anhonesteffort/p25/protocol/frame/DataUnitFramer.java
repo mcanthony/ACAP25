@@ -89,7 +89,8 @@ public class DataUnitFramer extends Source<DataUnit, Sink<DataUnit>> implements 
   }
 
   private void onSyncConsumed(DiBitSyncGate sourceGate) {
-    log.debug("on sync consumed: " + (++syncCount));
+    if ((++syncCount % 10) == 0)
+      log.debug("on sync consumed: " + syncCount);
 
     if (!cqpskSyncGates.isEmpty()) {
       if (sourceGate.getSync() == P25.SYNC90DEG)
@@ -116,7 +117,9 @@ public class DataUnitFramer extends Source<DataUnit, Sink<DataUnit>> implements 
   }
 
   private void onDataUnitComplete(DiBitSyncGate sourceGate, DataUnit dataUnit) {
-    log.debug("on data unit complete: " + (++duCount) + ", " + dataUnit.getNid());
+    if ((++duCount % 10) == 0)
+      log.debug("on data unit complete: " + duCount + ", " + dataUnit.getNid());
+
     syncGates.remove(sourceGate);
 
     switch (dataUnit.getNid().getDuid().getId()) {

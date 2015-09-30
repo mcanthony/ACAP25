@@ -21,12 +21,8 @@ import org.anhonesteffort.p25.ecc.Golay_17_6_8;
 import org.anhonesteffort.p25.ecc.ReedSolomon_36_20_17;
 import org.anhonesteffort.p25.util.DiBitByteBufferSink;
 import org.anhonesteffort.p25.util.Util;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class HeaderDataUnit extends DataUnit {
-
-  private static final Logger log = LoggerFactory.getLogger(HeaderDataUnit.class);
 
   private final byte[]  messageIndicator;
   private final int     manufacturerId;
@@ -58,8 +54,6 @@ public class HeaderDataUnit extends DataUnit {
     keyId            = ((hexBits[14] & 0x03) << 14) + (hexBits[15] << 8) + (hexBits[16] << 2) + (hexBits[17] >> 4);
     talkGroupId      = ((hexBits[17] & 0x0F) << 12) + (hexBits[18] << 6) + hexBits[19];
     intact           = rsResult >= 0;
-
-    log.debug("decoded to: " + toString());
   }
 
   private HeaderDataUnit(Nid                 nid,

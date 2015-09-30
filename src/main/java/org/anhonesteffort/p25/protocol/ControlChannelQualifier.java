@@ -17,6 +17,7 @@
 
 package org.anhonesteffort.p25.protocol;
 
+import org.anhonesteffort.p25.DebugDataUnitSink;
 import org.anhonesteffort.p25.plot.SpectrumFrame;
 import org.anhonesteffort.p25.filter.SampleToSamplesConverter;
 import org.anhonesteffort.p25.plot.ConstellationFrame;
@@ -63,10 +64,12 @@ public class ControlChannelQualifier implements Callable<Boolean> {
     SpectrumFrame            spectrumFrame      = new SpectrumFrame();
     ConstellationFrame       constellationFrame = new ConstellationFrame();
     SampleToSamplesConverter hack               = new SampleToSamplesConverter();
+    DebugDataUnitSink        debugSink          = new DebugDataUnitSink();
 
     hack.addSink(spectrumFrame);
     channel.addFilterSpy(P25Channel.FilterType.BASEBAND, hack);
     channel.addFilterSpy(P25Channel.FilterType.DEMODULATION, constellationFrame);
+    channel.addSink(debugSink);
 
     spectrumFrame.setTitle("channel: " + channel.getSpec().getCenterFrequency());
     spectrumFrame.setSize(400, 300);
@@ -82,6 +85,7 @@ public class ControlChannelQualifier implements Callable<Boolean> {
       Thread.sleep(30000);
 
     } finally {
+      channel.removeSink(debugSink);
       channel.removeFilterSpy(P25Channel.FilterType.BASEBAND, hack);
       channel.removeFilterSpy(P25Channel.FilterType.DEMODULATION, constellationFrame);
       channelFuture.cancel(true);
