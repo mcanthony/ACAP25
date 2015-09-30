@@ -29,17 +29,15 @@ public class LogicalLinkDataUnit1 extends LogicalLinkDataUnit {
   private static final Logger log = LoggerFactory.getLogger(LogicalLinkDataUnit1.class);
 
   private final LinkControlWord linkControlWord;
-  private final VoiceCodeWord[] voiceCodeWords;
   private final boolean         intact;
 
   public LogicalLinkDataUnit1(Nid nid, DiBitByteBufferSink sink) {
     super(nid, sink);
 
     ReedSolomon_24_12_13 reedSolomon = new ReedSolomon_24_12_13();
-    int                  rsResult    = reedSolomon.decode(rsLinkControl);
+    int                  rsResult    = reedSolomon.decode(rsHexbits24);
 
-    linkControlWord = new LinkControlWordFactory().getLinkControlFor(rsLinkControl);
-    voiceCodeWords  = new VoiceCodeWord[0]; // todo
+    linkControlWord = new LinkControlWordFactory().getLinkControlFor(rsHexbits24);
     intact          = rsResult >= 0;
 
     log.debug("decoded to: " + toString());
@@ -48,13 +46,11 @@ public class LogicalLinkDataUnit1 extends LogicalLinkDataUnit {
   private LogicalLinkDataUnit1(Nid                 nid,
                                DiBitByteBufferSink sink,
                                LinkControlWord     linkControlWord,
-                               VoiceCodeWord[]     voiceCodeWords,
                                boolean             intact)
   {
     super(nid, sink);
 
     this.linkControlWord = linkControlWord;
-    this.voiceCodeWords  = voiceCodeWords;
     this.intact          = intact;
   }
 
@@ -67,14 +63,10 @@ public class LogicalLinkDataUnit1 extends LogicalLinkDataUnit {
     return linkControlWord;
   }
 
-  public VoiceCodeWord[] getVoiceCodeWords() {
-    return voiceCodeWords;
-  }
-
   @Override
   public DataUnit copy() {
     return new LogicalLinkDataUnit1(
-        nid, sink.copy(), linkControlWord, voiceCodeWords, intact
+        nid, sink.copy(), linkControlWord, intact
     );
   }
 

@@ -28,7 +28,7 @@ import org.anhonesteffort.p25.filter.decode.QpskPolarSlicer;
 import org.anhonesteffort.p25.filter.rate.RateChangeFilter;
 import org.anhonesteffort.p25.primitive.ChannelSpec;
 import org.anhonesteffort.p25.primitive.ComplexNumber;
-import org.anhonesteffort.p25.primitive.DiBit;
+import org.anhonesteffort.p25.protocol.frame.DataUnit;
 import org.anhonesteffort.p25.protocol.frame.DataUnitFramer;
 import org.anhonesteffort.p25.sample.DynamicSink;
 import org.anhonesteffort.p25.sample.Samples;
@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-public class P25Channel extends Source<DiBit, Sink<DiBit>>
+public class P25Channel extends Source<DataUnit, Sink<DataUnit>>
     implements SamplesSink, Supplier<List<ComplexNumber>>, Callable<Void>
 {
 
@@ -70,6 +70,7 @@ public class P25Channel extends Source<DiBit, Sink<DiBit>>
   private Filter<ComplexNumber>                   baseband;
   private Filter<ComplexNumber>                   gainControl;
   private ComplexNumberCqpskDemodulator           cqpskDemodulation;
+  private DataUnitFramer                          framer;
   private Long                                    channelRate = -1l;
 
   public enum FilterType {
@@ -110,7 +111,7 @@ public class P25Channel extends Source<DiBit, Sink<DiBit>>
       cqpskDemodulation = new ComplexNumberCqpskDemodulator(channelRate, SYMBOL_RATE);
 
       QpskPolarSlicer slicer = new QpskPolarSlicer();
-      DataUnitFramer  framer = new DataUnitFramer(Optional.of(cqpskDemodulation));
+                      framer = new DataUnitFramer(Optional.of(cqpskDemodulation));
 
       freqTranslation.addSink(resampling);
       resampling.addSink(baseband);
@@ -129,12 +130,29 @@ public class P25Channel extends Source<DiBit, Sink<DiBit>>
               sink -> sink.onSourceStateChange(channelRate, 0d)
           )
       );
+
+      sinks.forEach(framer::addSink);
+    }
+  }
+
+  @Override
+  public void addSink(Sink<DataUnit> sink) {
+    synchronized (freqTranslationLock) {
+      super.addSink(sink);
+      framer.addSink(sink);
+    }
+  }
+
+  @Override
+  public void removeSink(Sink<DataUnit> sink) {
+    synchronized (freqTranslationLock) {
+      super.removeSink(sink);
+      framer.removeSink(sink);
     }
   }
 
   public void addFilterSpy(FilterType type, DynamicSink<ComplexNumber> sink) {
     synchronized (freqTranslationLock) {
-      assert freqTranslation != null;
       switch (type) {
         case TRANSLATION:
           freqTranslation.addSink(sink);
@@ -160,7 +178,6 @@ public class P25Channel extends Source<DiBit, Sink<DiBit>>
 
   public void removeFilterSpy(FilterType type, DynamicSink<ComplexNumber> sink) {
     synchronized (freqTranslationLock) {
-      assert freqTranslation != null;
       switch (type) {
         case TRANSLATION:
           freqTranslation.removeSink(sink);

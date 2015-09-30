@@ -29,19 +29,17 @@ public class LogicalLinkDataUnit2 extends LogicalLinkDataUnit {
   private final byte[]          messageIndicator;
   private final int             algorithmId;
   private final int             keyId;
-  private final VoiceCodeWord[] voiceCodeWords;
   private final boolean         intact;
 
   public LogicalLinkDataUnit2(Nid nid, DiBitByteBufferSink sink) {
     super(nid, sink);
 
     ReedSolomon_24_16_9 reedSolomon = new ReedSolomon_24_16_9();
-    int                 rsResult    = reedSolomon.decode(rsLinkControl);
+    int                 rsResult    = reedSolomon.decode(rsHexbits24);
 
     messageIndicator = new byte[0];
-    algorithmId      = (rsLinkControl[12] << 2) + (rsLinkControl[13] >> 4);
-    keyId            = ((rsLinkControl[13] & 0x0F) << 12) + (rsLinkControl[14] << 6) + rsLinkControl[15];
-    voiceCodeWords   = new VoiceCodeWord[0]; // todo
+    algorithmId      = (rsHexbits24[12] << 2) + (rsHexbits24[13] >> 4);
+    keyId            = ((rsHexbits24[13] & 0x0F) << 12) + (rsHexbits24[14] << 6) + rsHexbits24[15];
     intact           = rsResult >= 0;
 
     log.debug("decoded to: " + toString());
@@ -52,7 +50,6 @@ public class LogicalLinkDataUnit2 extends LogicalLinkDataUnit {
                                byte[]              messageIndicator,
                                int                 algorithmId,
                                int                 keyId,
-                               VoiceCodeWord[]     voiceCodeWords,
                                boolean             intact)
   {
     super(nid, sink);
@@ -60,7 +57,6 @@ public class LogicalLinkDataUnit2 extends LogicalLinkDataUnit {
     this.messageIndicator = messageIndicator;
     this.algorithmId      = algorithmId;
     this.keyId            = keyId;
-    this.voiceCodeWords   = voiceCodeWords;
     this.intact           = intact;
   }
 
@@ -81,14 +77,10 @@ public class LogicalLinkDataUnit2 extends LogicalLinkDataUnit {
     return keyId;
   }
 
-  public VoiceCodeWord[] getVoiceCodeWords() {
-    return voiceCodeWords;
-  }
-
   @Override
   public DataUnit copy() {
     return new LogicalLinkDataUnit2(
-        nid, sink.copy(), messageIndicator, algorithmId, keyId, voiceCodeWords, intact
+        nid, sink.copy(), messageIndicator, algorithmId, keyId, intact
     );
   }
 

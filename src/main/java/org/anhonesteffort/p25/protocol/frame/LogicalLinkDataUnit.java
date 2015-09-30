@@ -23,7 +23,8 @@ import org.anhonesteffort.p25.util.Util;
 
 public abstract class LogicalLinkDataUnit extends DataUnit {
 
-  protected final int[] rsLinkControl = new int[24];
+  protected final int[]           rsHexbits24 = new int[24];
+  protected final VoiceCodeWord[] voiceCodeWords;
 
   public LogicalLinkDataUnit(Nid nid, DiBitByteBufferSink sink) {
     super(nid, sink);
@@ -38,9 +39,15 @@ public abstract class LogicalLinkDataUnit extends DataUnit {
         int info6      = codeword10 >> 4;
         int parity4    = codeword10 & 0x0F;
 
-        rsLinkControl[hexCount++] = hamming.decode(info6, parity4);
+        rsHexbits24[hexCount++] = hamming.decode(info6, parity4);
       }
     }
+
+    voiceCodeWords = new VoiceCodeWord[9]; // todo
+  }
+
+  public VoiceCodeWord[] getVoiceCodeWords() {
+    return voiceCodeWords;
   }
 
 }
