@@ -20,10 +20,10 @@ package org.anhonesteffort.p25.sample.usrp;
 import org.anhonesteffort.p25.sample.TunableSamplesSource;
 import org.anhonesteffort.p25.sample.SamplesSourceException;
 import org.anhonesteffort.p25.sample.TunableSamplesSourceProvider;
-import guard.banana.uhd.Device;
-import guard.banana.uhd.types.DeviceAddress;
-import guard.banana.uhd.types.DeviceAddresses;
-import guard.banana.uhd.usrp.MultiUsrp;
+import org.anhonesteffort.uhd.Device;
+import org.anhonesteffort.uhd.types.DeviceAddress;
+import org.anhonesteffort.uhd.types.DeviceAddresses;
+import org.anhonesteffort.uhd.usrp.MultiUsrp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

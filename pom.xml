@@ -27,7 +27,7 @@
             <version>2.5.4</version>
         </dependency>
         <dependency>
-            <groupId>guard.banana.uhd</groupId>
+            <groupId>org.anhonesteffort.uhd</groupId>
             <artifactId>uhd-java</artifactId>
             <version>0.1</version>
         </dependency>
