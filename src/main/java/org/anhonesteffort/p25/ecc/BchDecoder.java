@@ -14,307 +14,162 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * adapted from https://github.com/szechyjs/dsd/blob/master/include/ReedSolomon.hpp
- *   which was adapted from http://www.eccpage.com/rs.c
- *     which was authored by Simon Rockliff back when variable names were limited to 3 characters
- *
- * I have to take a shower every time I look at this code, honestly.
+ * Derived from:
+ *   OP25 - bch.cc (Copyright 2010 KA1RBI)
  */
 
 package org.anhonesteffort.p25.ecc;
 
-import java.util.stream.IntStream;
-
 public class BchDecoder {
 
-  private final int NN;
-  private final int KK;
-  private final int TT;
+  private static final int[] bchGFexp = new int[] {
+      1, 2, 4, 8, 16, 32, 3, 6, 12, 24, 48, 35, 5, 10, 20, 40,
+      19, 38, 15, 30, 60, 59, 53, 41, 17, 34, 7, 14, 28, 56, 51, 37,
+      9, 18, 36, 11, 22, 44, 27, 54, 47, 29, 58, 55, 45, 25, 50, 39,
+      13, 26, 52, 43, 21, 42, 23, 46, 31, 62, 63, 61, 57, 49, 33, 0
+  };
 
-  private final int[] alphaTo;
-  private final int[] indexOf;
+  private static final int[] bchGFlog = new int[] {
+      -1, 0, 1, 6, 2, 12, 7, 26, 3, 32, 13, 35, 8, 48, 27, 18,
+      4, 24, 33, 16, 14, 52, 36, 54, 9, 45, 49, 38, 28, 41, 19, 56,
+      5, 62, 25, 11, 34, 31, 17, 47, 15, 23, 53, 51, 37, 44, 55, 40,
+      10, 61, 46, 30, 50, 22, 39, 43, 29, 60, 42, 21, 20, 59, 57, 58
+  };
 
-  private BchDecoder(int NN, int KK, int TT, int[] alphaTo, int[] indexOf) {
-    this.NN      = NN;
-    this.KK      = KK;
-    this.TT      = TT;
-    this.alphaTo = alphaTo;
-    this.indexOf = indexOf;
-  }
+  public int decode(int[] bits64) {
+    int[][] elp  = new int[24][22];
+    int[]   S    = new int[23];
+    int[]   D    = new int[23];
+    int[]   L    = new int[24];
+    int[]   uLu  = new int[24];
+    int[]   locn = new int[11];
+    int[]   reg  = new int[12];
 
-  public static BchDecoder newInstance(int MM, int TT, int generatorPolynomial[]) {
-    int NN = (int) (Math.pow(2, MM) - 1);
-    int KK = NN - 2 * TT;
+    int i, j, U, q, count, SynError, CantDecode;
+    SynError = CantDecode = 0;
 
-    int[][] golay = generateGolayField(generatorPolynomial, MM, NN);
-    return new BchDecoder(NN, KK, TT, golay[0], golay[1]);
-  }
-
-  private static int[][] generateGolayField(int[] polynomial, int MM, int NN) {
-    int[] alphaTo = new int[NN + 1];
-    int[] indexOf = new int[NN + 1];
-    int   mask    = 1;
-
-    alphaTo[MM] = 0;
-
-    for (int i = 0; i < MM; i++) {
-      alphaTo[i]          = mask;
-      indexOf[alphaTo[i]] = i;
-
-      if (polynomial[i] != 0) {
-        alphaTo[MM] ^= mask;
+    for(i = 1; i <= 22; i++) {
+      S[i] = 0;
+      // FOR j = 0 TO 62
+      for(j = 0; j <= 62; j++) {
+        if(bits64[j] == 1) { S[i] = S[i] ^ bchGFexp[(i * j) % 63]; }
       }
-
-      mask <<= 1;
+      if(S[i] == 1) { SynError = 1; }
+      S[i] = bchGFlog[S[i]];
+      // printf("S[%d] %d\n", i, S[i]);
     }
 
-    indexOf[alphaTo[MM]] = MM;
-    mask >>= 1;
-
-    for (int i = MM + 1; i < NN; i++) {
-      if (alphaTo[i - 1] >= mask) {
-        alphaTo[i] = alphaTo[MM] ^ ((alphaTo[i - 1] ^ mask) << 1);
-      } else {
-        alphaTo[i] = alphaTo[i - 1] << 1;
+    if(SynError == 1) { //if there are errors, try to correct them
+      L[0] = 0; uLu[0] = -1; D[0] = 0;    elp[0][ 0] = 0;
+      L[1] = 0; uLu[1] = 0;  D[1] = S[1]; elp[1][ 0] = 1;
+      //FOR i = 1 TO 21
+      for(i = 1; i <= 21; i++) {
+        elp[0][ i] = -1; elp[1][ i] = 0;
       }
-
-      indexOf[alphaTo[i]] = i;
-    }
-
-    indexOf[0] = -1;
-
-    return new int[][] {alphaTo, indexOf};
-  }
-
-  public boolean decode(final int[] input, int[] output) {
-    int u, q, count;
-    boolean syn_error           = false;
-    boolean irrecoverable_error = false;
-
-    int[]   d    = new int[NN - KK + 2];
-    int[]   l    = new int[NN - KK + 2];
-    int[]   u_lu = new int[NN - KK + 2];
-    int[]   s    = new int[NN - KK + 1];
-    int[]   root = new int[TT];
-    int[]   loc  = new int[TT];
-    int[]   z    = new int[TT + 1];
-    int[]   err  = new int[NN];
-    int[]   reg  = new int[TT + 1];
-    int[][] elp  = new int[NN - KK + 2][NN - KK];
-
-    int[] reversed = new int[output.length];
-    for (int i = 0; i < NN; i++) {
-      reversed[i] = indexOf[input[input.length - 1 - i]];
-    }
-
-    for (int i = 1; i <= NN - KK; i++) {
-      s[i] = 0;
-
-      for (int j = 0; j < NN; j++) {
-        if (reversed[j] != -1) {
-          s[i] ^= alphaTo[(reversed[j] + i * j) % NN];
-        }
-      }
-
-      if (s[i] != 0) {
-        syn_error = true;
-      }
-
-      s[i] = indexOf[s[i]];
-    }
-
-    if (syn_error) {
-      d[0]      = 0;
-      d[1]      = s[1];
-      elp[0][0] = 0;
-      elp[1][0] = 1;
-
-      for (int i = 1; i < NN - KK; i++) {
-        elp[0][i] = -1;
-        elp[1][i] = 0;
-      }
-
-      l[0]    = 0;
-      l[1]    = 0;
-      u_lu[0] = -1;
-      u_lu[1] = 0;
-      u       = 0;
+      U = 0;
 
       do {
-        u++;
-
-        if (d[u] == -1) {
-          l[u + 1] = l[u];
-
-          for (int i = 0; i <= l[u]; i++) {
-            elp[u + 1][i] = elp[u][i];
-            elp[u][i]     = indexOf[elp[u][i]];
+        U = U + 1;
+        if( D[U] == -1) {
+          L[U + 1] = L[U];
+          // FOR i = 0 TO L[U]
+          for(i = 0; i <= L[U]; i++) {
+            elp[U + 1][ i] = elp[U][ i]; elp[U][ i] = bchGFlog[elp[U][ i]];
           }
         } else {
-          q = u - 1;
-
-          while ((d[q] == -1) && (q > 0)) {
-            q--;
+          //search for words with greatest uLu(q) for which d(q)!=0
+          q = U - 1;
+          while((D[q] == -1) &&(q > 0)) { q = q - 1; }
+          //have found first non-zero d(q)
+          if( q > 0) {
+            j = q;
+            do { j = j - 1; if((D[j] != -1) &&(uLu[q] < uLu[j])) { q = j; }
+            } while( j > 0) ;
           }
 
-          if (q > 0) {
-            int j = q;
-
-            do {
-              j--;
-
-              if ((d[j] != -1) && (u_lu[q] < u_lu[j])) {
-                q = j;
-              }
-            }
-            while (j > 0);
-          }
-
-          if (l[u] > l[q] + u - q) {
-            l[u + 1] = l[u];
+          //store degree of new elp polynomial
+          if( L[U] > L[q] + U - q) {
+            L[U + 1] = L[U] ;
           } else {
-            l[u + 1] = l[q] + u - q;
+            L[U + 1] = L[q] + U - q;
           }
 
-          for (int i = 0; i < NN - KK; i++) {
-            elp[u + 1][i] = 0;
+          ///* form new elp(x) */
+          // FOR i = 0 TO 21
+          for(i = 0; i <= 21; i++) {
+            elp[U + 1][ i] = 0;
           }
-
-          for (int i = 0; i <= l[q]; i++) {
-            if (elp[q][i] != -1) {
-              elp[u + 1][i + u - q] = alphaTo[(d[u] + NN - d[q] + elp[q][i]) % NN];
+          // FOR i = 0 TO L(q)
+          for(i = 0; i <= L[q]; i++) {
+            if( elp[q][ i] != -1) {
+              elp[U + 1][ i + U - q] = bchGFexp[(D[U] + 63 - D[q] + elp[q][ i]) % 63];
             }
           }
-          for (int i = 0; i <= l[u]; i++) {
-            elp[u + 1][i] ^= elp[u][i];
-            elp[u][i]      = indexOf[elp[u][i]];
+          // FOR i = 0 TO L(U)
+          for(i = 0; i <= L[U]; i++) {
+            elp[U + 1][ i] = elp[U + 1][ i] ^ elp[U][ i];
+            elp[U][ i] = bchGFlog[elp[U][ i]];
           }
         }
+        uLu[U + 1] = U - L[U + 1];
 
-        u_lu[u + 1] = u - l[u + 1];
-
-        if (u < NN - KK) {
-          if (s[u + 1] != -1) {
-            d[u + 1] = alphaTo[s[u + 1]];
-          } else {
-            d[u + 1] = 0;
-          }
-          for (int i = 1; i <= l[u + 1]; i++) {
-            if ((s[u + 1 - i] != -1) && (elp[u + 1][i] != 0)) {
-              d[u + 1] ^= alphaTo[(s[u + 1 - i] + indexOf[elp[u + 1][i]]) % NN];
+        //form(u+1)th discrepancy
+        if( U < 22) {
+          //no discrepancy computed on last iteration
+          if( S[U + 1] != -1) { D[U + 1] = bchGFexp[S[U + 1]]; } else { D[U + 1] = 0; }
+          // FOR i = 1 TO L(U + 1)
+          for(i = 1; i <= L[U + 1]; i++) {
+            if((S[U + 1 - i] != -1) &&(elp[U + 1][ i] != 0)) {
+              D[U + 1] = D[U + 1] ^ bchGFexp[(S[U + 1 - i] + bchGFlog[elp[U + 1][ i]]) % 63];
             }
           }
-
-          d[u + 1] = indexOf[d[u + 1]];
+          //put d(u+1) into index form */
+          D[U + 1] = bchGFlog[D[U + 1]];
         }
-      }
-      while ((u < NN - KK) && (l[u + 1] <= TT));
+      } while((U < 22) &&(L[U + 1] <= 11));
 
-      u++;
-
-      if (l[u] <= TT) {
-        for (int i = 0; i <= l[u]; i++) {
-          elp[u][i] = indexOf[elp[u][i]];
-        }
-
-        for (int i = 1; i <= l[u]; i++) {
-          reg[i] = elp[u][i];
+      U = U + 1;
+      if( L[U] <= 11) { // /* Can correct errors */
+        //put elp into index form
+        // FOR i = 0 TO L[U]
+        for(i = 0; i <= L[U]; i++) {
+          elp[U][ i] = bchGFlog[elp[U][ i]];
         }
 
+        //Chien search: find roots of the error location polynomial
+        // FOR i = 1 TO L(U)
+        for(i = 1; i <= L[U]; i++) {
+          reg[i] = elp[U][ i];
+        }
         count = 0;
-
-        for (int i = 1; i <= NN; i++) {
+        // FOR i = 1 TO 63
+        for(i = 1; i <= 63; i++) {
           q = 1;
-
-          for (int j = 1; j <= l[u]; j++) {
-            if (reg[j] != -1) {
-              reg[j] = (reg[j] + j) % NN;
-              q     ^= alphaTo[reg[j]];
+          //FOR j = 1 TO L(U)
+          for(j = 1; j <= L[U]; j++) {
+            if( reg[j] != -1) {
+              reg[j] =(reg[j] + j) % 63; q = q ^ bchGFexp[reg[j]];
             }
           }
-
-          if (q == 0) {
-            root[count] = i;
-            loc[count]  = NN - i;
-            count++;
+          if( q == 0) { //store root and error location number indices
+            locn[count] = 63 - i; count = count + 1;
           }
         }
-
-        if (count == l[u]) {
-          for (int i = 1; i <= l[u]; i++) {
-            if ((s[i] != -1) && (elp[u][i] != -1)) {
-              z[i] = alphaTo[s[i]] ^ alphaTo[elp[u][i]];
-            } else if ((s[i] != -1) && (elp[u][i] == -1)) {
-              z[i] = alphaTo[s[i]];
-            } else if ((s[i] == -1) && (elp[u][i] != -1)) {
-              z[i] = alphaTo[elp[u][i]];
-            } else {
-              z[i] = 0;
-            }
-
-            for (int j = 1; j < i; j++) {
-              if ((s[j] != -1) && (elp[u][i - j] != -1)) {
-                z[i] ^= alphaTo[(elp[u][i - j] + s[j]) % NN];
-              }
-            }
-
-            z[i] = indexOf[z[i]];
+        if( count == L[U]) {
+          //no. roots = degree of elp hence <= t errors
+          //FOR i = 0 TO L[U] - 1
+          for(i = 0; i <= L[U]-1; i++) {
+            bits64[locn[i]] = bits64[locn[i]] ^ 1;
           }
-
-          for (int i = 0; i < NN; i++) {
-            err[i] = 0;
-
-            if (reversed[i] != -1) {
-              reversed[i] = alphaTo[reversed[i]];
-            } else {
-              reversed[i] = 0;
-            }
-          }
-
-          for (int i = 0; i < l[u]; i++) {
-            err[loc[i]] = 1;
-
-            for (int j = 1; j <= l[u]; j++) {
-              if (z[j] != -1) {
-                err[loc[i]] ^= alphaTo[(z[j] + j * root[i]) % NN];
-              }
-            }
-
-            if (err[loc[i]] != 0) {
-              err[loc[i]] = indexOf[err[loc[i]]];
-              q           = 0;
-
-              for (int j = 0; j < l[u]; j++) {
-                if (j != i) {
-                  q += indexOf[1 ^ alphaTo[(loc[j] + root[i]) % NN]];
-                }
-              }
-
-              q                 = q % NN;
-              err[loc[i]]       = alphaTo[(err[loc[i]] - q + NN) % NN];
-              reversed[loc[i]] ^= err[loc[i]];
-            }
-          }
-        } else {
-          irrecoverable_error = true;
+          CantDecode = count;
+        } else { //elp has degree >t hence cannot solve
+          CantDecode = -1;
         }
-
       } else {
-        irrecoverable_error = true;
-      }
-    } else {
-      for (int i = 0; i < NN; i++) {
-        if (reversed[i] != -1) {
-          reversed[i] = alphaTo[reversed[i]];
-        } else {
-          reversed[i] = 0;
-        }
+        CantDecode = -2;
       }
     }
-
-    IntStream.range(0, output.length)
-             .forEach(i -> output[i] = reversed[reversed.length - 1 - i]);
-
-    return !irrecoverable_error;
+    return CantDecode;
   }
+
 }

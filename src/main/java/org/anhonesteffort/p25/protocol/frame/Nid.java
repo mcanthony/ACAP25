@@ -17,10 +17,10 @@
 
 package org.anhonesteffort.p25.protocol.frame;
 
-import org.anhonesteffort.p25.ecc.DecoderProvider;
 import org.anhonesteffort.p25.ecc.BchDecoder;
-import org.anhonesteffort.p25.protocol.P25;
 import org.anhonesteffort.p25.util.Util;
+
+import java.util.stream.IntStream;
 
 public class Nid {
 
@@ -35,13 +35,16 @@ public class Nid {
   }
 
   public Nid(byte[] eccBytes) {
-    BchDecoder decoder     = DecoderProvider.bchDecoderFor(P25.RS_ERROR_NID);
-    int[]      encodedBits = Util.toBinaryIntArray(eccBytes, 0, 63);
-    int[]      decodedBits = new int[63];
+    BchDecoder decoder = new BchDecoder();
+    int[]      bits64  = Util.toBinaryIntArray(eccBytes, 0, 64);
+    int[]      rBits64 = new int[64];
 
-    intact = decoder.decode(encodedBits, decodedBits);
-    nac    = Util.binaryIntArrayToInt(decodedBits, 0, 12);
-    duid   = new Duid(Util.binaryIntArrayToInt(decodedBits, 12, 4));
+    IntStream.range(0, 64).forEach(i -> rBits64[i] = bits64[63 - i]);
+    intact = decoder.decode(rBits64) >= 0;
+    IntStream.range(0, 64).forEach(i -> bits64[i] = rBits64[63 - i]);
+
+    nac  = Util.binaryIntArrayToInt(bits64, 0, 12);
+    duid = new Duid(Util.binaryIntArrayToInt(bits64, 12, 4));
   }
 
   public int getNac() {
