@@ -7,34 +7,37 @@ don't know what you're doing, dismantle the state, fight the police.
 ![acap25 preview](/plots.png)
 
 ## Limitations
-ACAP25 has only been tested on a USRP B100 but it will likely work for other
-USRP Bus Series SDRs without modification. To add support for your favorite
-SDR implement `TunableSamplesSourceProvider.java` and extend
-`TunableSamplesSource.java`. ACAP25 cannot demodulate C4FM signals, only
-CQPSK for now.
-
 ACAP25 is very much a work in progress, I'm only publishing this early
 because friend's of mine have an interest in learning DSP and scripting
-GNURadio is, in my opinion, not fun or educational.
-
-## Install uhd-java
-Clone the [uhd-java repository](https://github.com/rhodey/uhd-java) and
-follow the instructions to install `org.anhonesteffort.uhd:uhd-java:0.1`
-in your local Maven repo.
+GNURadio is, in my opinion, not fun or educational. ACAP25 cannot demodulate
+C4FM signals, only CQPSK for now.
 
 ## Build jmbe
 Clone the [jmbe repository](https://github.com/DSheirer/jmbe) and follow
 the instructions to build `jmbe-x.x.x.jar`. Copy the resulting jar into
-`lib/`.
+`import/`.
+
+## Build and install
+```
+$ mvn install package
+```
+
+## Chose a sample source
+ACAP25 uses the Java SPI pattern to allow for modular software defined
+radio support. To add support for your SDR simply extend `org.anhonesteffort.p25.sample.TunableSamplesSource`
+and implement `org.anhonesteffort.p25.sample.TunableSamplesSourceProvider`,
+then add these files to your java classpath.
+
+Currently the following ACAP25 drivers are available:
+  +  Ettus USRP SDRs - [acap25-usrp](https://github.com/rhodey/acap25-usrp)
 
 ## Create test.yml
 Copy `systems.yml` to `test.yml` and modify according to the P25 trunked
 systems within range. You can use [Gqrx SDR](http://gqrx.dk/) to identify
 active channels yourself or query the [Radio Reference Database](http://www.radioreference.com/apps/db/).
 
-## Build and run
+## Run
 ```
-$ mvn package
 $ ./run_acap25.sh
 ```
 

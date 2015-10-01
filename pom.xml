@@ -14,22 +14,7 @@
             <artifactId>jmbe</artifactId>
             <version>0.2.0</version>
             <scope>system</scope>
-            <systemPath>${basedir}/lib/jmbe-interface-0.2.0.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>1.7.12</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-yaml</artifactId>
-            <version>2.5.4</version>
-        </dependency>
-        <dependency>
-            <groupId>org.anhonesteffort.uhd</groupId>
-            <artifactId>uhd-java</artifactId>
-            <version>0.1</version>
+            <systemPath>${basedir}/import/jmbe-interface-0.2.0.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.github.wendykierp</groupId>
@@ -37,9 +22,19 @@
             <version>3.1</version>
         </dependency>
         <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+            <version>2.5.4</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>
             <version>4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.7.12</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
