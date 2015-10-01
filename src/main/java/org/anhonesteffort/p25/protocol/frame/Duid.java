@@ -35,19 +35,19 @@ public class Duid {
 
     switch (id) {
       case ID_HEADER:
-        bitLength = 722;
+        bitLength = 658;
         break;
 
       case ID_TERMINATOR_WO_LINK:
-        bitLength = 92;
+        bitLength = 28;
         break;
 
       case ID_LLDU1:
-        bitLength = 1632;
+        bitLength = 1568;
         break;
 
       case ID_LLDU2:
-        bitLength = 1632;
+        bitLength = 1568;
         break;
 
       case ID_PACKET:
@@ -55,7 +55,7 @@ public class Duid {
         break;
 
       case ID_TERMINATOR_W_LINK:
-        bitLength = 372;
+        bitLength = 308;
         break;
 
       default:

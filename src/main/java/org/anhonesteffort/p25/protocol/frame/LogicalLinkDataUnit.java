@@ -21,10 +21,17 @@ import org.anhonesteffort.p25.ecc.Hamming_10_6_3;
 import org.anhonesteffort.p25.util.DiBitByteBufferSink;
 import org.anhonesteffort.p25.util.Util;
 
+import java.util.BitSet;
+import java.util.stream.IntStream;
+
 public abstract class LogicalLinkDataUnit extends DataUnit {
 
-  protected final int[]           rsHexbits24 = new int[24];
-  protected final VoiceCodeWord[] voiceCodeWords;
+  private static final int[] VOICE_CODE_WORD_INDEXES = new int[] {
+      0, 144, 328, 512, 696, 880, 1064, 1248, 1424
+  };
+
+  protected final int[]           rsHexbits24    = new int[24];
+  protected final VoiceCodeWord[] voiceCodeWords = new VoiceCodeWord[9];
 
   public LogicalLinkDataUnit(Nid nid, DiBitByteBufferSink sink) {
     super(nid, sink);
@@ -43,7 +50,18 @@ public abstract class LogicalLinkDataUnit extends DataUnit {
       }
     }
 
-    voiceCodeWords = new VoiceCodeWord[9]; // todo
+    // todo: gross
+    BitSet bitSet = new BitSet(bytes.length * 8);
+    IntStream.range(0, bytes.length * 8)
+             .filter(bit -> Util.bytesToInt(bytes, bit, 1) == 1)
+             .forEach(bitSet::set);
+
+    int voiceCwCount = 0;
+    for (int bitIndex : VOICE_CODE_WORD_INDEXES) {
+      voiceCodeWords[voiceCwCount++] = new VoiceCodeWord(
+          bitSet.get(bitIndex, bitIndex + 144).toByteArray()
+      );
+    }
   }
 
   public VoiceCodeWord[] getVoiceCodeWords() {

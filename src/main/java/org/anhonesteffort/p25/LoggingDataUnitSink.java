@@ -22,9 +22,9 @@ import org.anhonesteffort.p25.protocol.frame.Duid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DebugDataUnitSink implements Sink<DataUnit> {
+public class LoggingDataUnitSink implements Sink<DataUnit> {
 
-  private final static Logger log = LoggerFactory.getLogger(DebugDataUnitSink.class);
+  private final static Logger log = LoggerFactory.getLogger(LoggingDataUnitSink.class);
 
   @Override
   public void consume(DataUnit element) {

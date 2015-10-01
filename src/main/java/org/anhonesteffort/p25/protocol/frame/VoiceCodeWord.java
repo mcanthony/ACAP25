@@ -19,13 +19,14 @@ package org.anhonesteffort.p25.protocol.frame;
 
 public class VoiceCodeWord {
 
-  private final byte[] voice;
-  private final byte[] parity;
+  private final byte[] voiceParityInterleaved;
 
-  public VoiceCodeWord(byte[] voice, byte[] parity) {
-    this.voice  = voice;
-    this.parity = parity;
+  public VoiceCodeWord(byte[] voiceParityInterleaved) {
+    this.voiceParityInterleaved = voiceParityInterleaved;
   }
 
+  public byte[] getVoiceParityInterleaved() {
+    return voiceParityInterleaved;
+  }
 
 }

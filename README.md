@@ -22,6 +22,11 @@ Clone the [uhd-java repository](https://github.com/rhodey/uhd-java) and
 follow the instructions to install `org.anhonesteffort.uhd:uhd-java:0.1`
 in your local Maven repo.
 
+## Build jmbe
+Clone the [jmbe repository](https://github.com/DSheirer/jmbe) and follow
+the instructions to build `jmbe-x.x.x.jar`. Copy the resulting jar into
+`lib/`.
+
 ## Create test.yml
 Copy `systems.yml` to `test.yml` and modify according to the P25 trunked
 systems within range. You can use [Gqrx SDR](http://gqrx.dk/) to identify

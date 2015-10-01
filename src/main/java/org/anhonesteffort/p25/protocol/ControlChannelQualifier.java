@@ -17,7 +17,8 @@
 
 package org.anhonesteffort.p25.protocol;
 
-import org.anhonesteffort.p25.DebugDataUnitSink;
+import org.anhonesteffort.p25.LoggingDataUnitSink;
+import org.anhonesteffort.p25.audio.ImbeAudioOutput;
 import org.anhonesteffort.p25.plot.SpectrumFrame;
 import org.anhonesteffort.p25.filter.SampleToSamplesConverter;
 import org.anhonesteffort.p25.plot.ConstellationFrame;
@@ -25,6 +26,7 @@ import org.anhonesteffort.p25.sample.SamplesSourceController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.sound.sampled.LineUnavailableException;
 import java.awt.event.WindowEvent;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -64,12 +66,24 @@ public class ControlChannelQualifier implements Callable<Boolean> {
     SpectrumFrame            spectrumFrame      = new SpectrumFrame();
     ConstellationFrame       constellationFrame = new ConstellationFrame();
     SampleToSamplesConverter hack               = new SampleToSamplesConverter();
-    DebugDataUnitSink        debugSink          = new DebugDataUnitSink();
+    LoggingDataUnitSink      debugSink          = new LoggingDataUnitSink();
+    ImbeAudioOutput          audioOutput        = null;
 
     hack.addSink(spectrumFrame);
     channel.addFilterSpy(P25Channel.FilterType.BASEBAND, hack);
     channel.addFilterSpy(P25Channel.FilterType.DEMODULATION, constellationFrame);
     channel.addSink(debugSink);
+
+    try {
+
+      audioOutput = new ImbeAudioOutput();
+      channel.addSink(audioOutput);
+
+    } catch (ReflectiveOperationException e) {
+      log.warn("unable to load jmbe library, audio playback will not work", e);
+    } catch (LineUnavailableException e) {
+      log.warn("unable to open audio output, audio playback will not work", e);
+    }
 
     spectrumFrame.setTitle("channel: " + channel.getSpec().getCenterFrequency());
     spectrumFrame.setSize(400, 300);
@@ -85,6 +99,11 @@ public class ControlChannelQualifier implements Callable<Boolean> {
       Thread.sleep(30000);
 
     } finally {
+      if (audioOutput != null) {
+        channel.removeSink(audioOutput);
+        audioOutput.stop();
+      }
+
       channel.removeSink(debugSink);
       channel.removeFilterSpy(P25Channel.FilterType.BASEBAND, hack);
       channel.removeFilterSpy(P25Channel.FilterType.DEMODULATION, constellationFrame);
