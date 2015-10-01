@@ -22,6 +22,7 @@ public class Duid {
   public static final int ID_HEADER             = 0x00;
   public static final int ID_TERMINATOR_WO_LINK = 0x03;
   public static final int ID_LLDU1              = 0x05;
+  public static final int ID_TRUNK_SIGNALING    = 0x07;
   public static final int ID_LLDU2              = 0x0A;
   public static final int ID_PACKET             = 0x0C;
   public static final int ID_TERMINATOR_W_LINK  = 0x0F;
@@ -44,6 +45,10 @@ public class Duid {
 
       case ID_LLDU1:
         bitLength = 1568;
+        break;
+
+      case ID_TRUNK_SIGNALING:
+        bitLength = 588;
         break;
 
       case ID_LLDU2:

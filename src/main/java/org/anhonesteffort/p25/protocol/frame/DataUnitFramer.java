@@ -135,6 +135,10 @@ public class DataUnitFramer extends Source<DataUnit, Sink<DataUnit>> implements 
         broadcast(new LogicalLinkDataUnit1(dataUnit.getNid(), dataUnit.sink));
         break;
 
+      case Duid.ID_TRUNK_SIGNALING:
+        broadcast(new TrunkingSignalingDataUnit(dataUnit.getNid(), dataUnit.sink));
+        break;
+
       case Duid.ID_LLDU2:
         broadcast(new LogicalLinkDataUnit2(dataUnit.getNid(), dataUnit.sink));
         break;

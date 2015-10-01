@@ -32,7 +32,7 @@ public class Util {
     int result        = 0;
 
     while (bitWriteCount < bitCount) {
-      int value       = bytes[byteReadIndex];
+      int value       = (bytes[byteReadIndex] & 0xFF);
       int bitRelative = bitReadIndex - (8 * byteReadIndex);
 
       result = Integer.rotateLeft(result, 1) + (Integer.rotateRight(value, 7 - bitRelative) & 0x01);
@@ -52,7 +52,7 @@ public class Util {
     int[] result        = new int[bitCount];
 
     while (bitWriteIndex < bitCount) {
-      int value       = bytes[byteReadIndex];
+      int value       = (bytes[byteReadIndex] & 0xFF);
       int bitRelative = bitReadIndex - (8 * byteReadIndex);
 
       result[bitWriteIndex++] = Integer.rotateRight(value, 7 - bitRelative) & 0x01;

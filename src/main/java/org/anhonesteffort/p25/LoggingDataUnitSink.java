@@ -37,6 +37,10 @@ public class LoggingDataUnitSink implements Sink<DataUnit> {
         log.debug("decoded lldu1: " + element);
         break;
 
+      case Duid.ID_TRUNK_SIGNALING:
+        log.debug("decoded tsdu: " + element);
+        break;
+
       case Duid.ID_LLDU2:
         log.debug("decoded lldu2: " + element);
         break;
