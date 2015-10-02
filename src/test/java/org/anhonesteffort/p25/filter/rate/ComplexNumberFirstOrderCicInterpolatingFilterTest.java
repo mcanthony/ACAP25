@@ -17,7 +17,6 @@
 
 package org.anhonesteffort.p25.filter.rate;
 
-import org.anhonesteffort.p25.filter.ComplexNumberFirFilter;
 import org.anhonesteffort.p25.filter.Filter;
 import org.anhonesteffort.p25.filter.FilterFactory;
 import org.anhonesteffort.p25.primitive.ComplexNumber;
@@ -38,10 +37,9 @@ public class ComplexNumberFirstOrderCicInterpolatingFilterTest {
     final long DESIRED_RATE  = 1500;
     final int  INTERPOLATION = (int) (DESIRED_RATE / SOURCE_RATE);
 
-    final CountAndSumSink        SINK     = new CountAndSumSink();
-    final ComplexNumberFirFilter CLEANUP  = new ComplexNumberFirFilter(new float[] {1f}, 1f);
+    final CountAndSumSink SINK = new CountAndSumSink();
     final ComplexNumberFirstOrderCicInterpolatingFilter CIC =
-        new ComplexNumberFirstOrderCicInterpolatingFilter(INTERPOLATION, CLEANUP);
+        new ComplexNumberFirstOrderCicInterpolatingFilter(INTERPOLATION);
 
     CIC.addSink(SINK);
 
@@ -65,9 +63,8 @@ public class ComplexNumberFirstOrderCicInterpolatingFilterTest {
     final SignalSink SIGNAL_SINK       = new SignalSink(SIGNAL_LENGTH);
     final SignalSink INTRP_SIGNAL_SINK = new SignalSink(INTRP_SIGNAL_LENGTH);
 
-    final ComplexNumberFirFilter CLEANUP = new ComplexNumberFirFilter(new float[] {1f}, 1f);
     final ComplexNumberFirstOrderCicInterpolatingFilter CIC =
-        new ComplexNumberFirstOrderCicInterpolatingFilter(INTERPOLATION, CLEANUP);
+        new ComplexNumberFirstOrderCicInterpolatingFilter(INTERPOLATION);
 
     LongStream.range(0, DESIRED_RATE * 2).forEach(l -> {
       if (l == (SIGNAL_LENGTH))

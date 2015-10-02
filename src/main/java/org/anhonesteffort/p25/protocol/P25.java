@@ -33,8 +33,9 @@ public class P25 {
 
   public static final int NID_LENGTH = 64;
 
-  public static final int[] RS_POLYNOMIAL = {1, 1, 0, 0, 0, 0, 1};
-  public static final int   RS_MM         =  6;
-  public static final int   RS_ERROR_NID  = 11;
+  public static final int OPCODE_GROUP_VOICE_CHAN_GRANT = 0x00;
+  public static final int OPCODE_ID_UPDATE_VUHF         = 0x34;
+  public static final int OPCODE_NETWORK_STATUS         = 0x3B;
+  public static final int OPCODE_ID_UPDATE_NO_VUHF      = 0x3D;
 
 }

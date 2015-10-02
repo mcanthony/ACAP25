@@ -22,6 +22,7 @@ import org.anhonesteffort.p25.protocol.frame.tsbk.TrunkingSignalingBlock;
 import org.anhonesteffort.p25.util.DiBitByteBufferSink;
 
 import java.util.List;
+import java.util.Optional;
 
 public class TrunkingSignalingDataUnit extends DataUnit {
 
@@ -53,6 +54,12 @@ public class TrunkingSignalingDataUnit extends DataUnit {
 
   public List<TrunkingSignalingBlock> getBlocks() {
     return blocks;
+  }
+
+  public Optional<TrunkingSignalingBlock> getFirstOf(int opCode) {
+    return blocks.stream()
+                 .filter(block -> block.getOpCode() == opCode)
+                 .findFirst();
   }
 
   @Override

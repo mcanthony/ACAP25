@@ -26,15 +26,10 @@ import java.util.stream.IntStream;
 public class ComplexNumberFirstOrderCicDecimatingFilter extends RateChangeFilter<ComplexNumber> {
 
   private final Filter<ComplexNumber> firstStage;
-  private final Filter<ComplexNumber> compensation;
 
-  public ComplexNumberFirstOrderCicDecimatingFilter(int decimation, Filter<ComplexNumber> compensation) {
+  public ComplexNumberFirstOrderCicDecimatingFilter(int decimation) {
     super(1, decimation);
-
-    firstStage        = new DecimatingCicStage(decimation, 1);
-    this.compensation = compensation;
-
-    firstStage.addSink(compensation);
+    firstStage = new DecimatingCicStage(decimation, 1);
   }
 
   @Override
@@ -44,12 +39,12 @@ public class ComplexNumberFirstOrderCicDecimatingFilter extends RateChangeFilter
 
   @Override
   public void addSink(Sink<ComplexNumber> sink) {
-    compensation.addSink(sink);
+    firstStage.addSink(sink);
   }
 
   @Override
   public void removeSink(Sink<ComplexNumber> sink) {
-    compensation.removeSink(sink);
+    firstStage.removeSink(sink);
   }
 
   public static class DecimatingCicStage extends Filter<ComplexNumber> {

@@ -18,6 +18,7 @@
 package org.anhonesteffort.p25.protocol.frame.tsbk;
 
 import org.anhonesteffort.p25.ecc.DeinterleaveTrellisDecoder;
+import org.anhonesteffort.p25.protocol.P25;
 import org.anhonesteffort.p25.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,8 +31,6 @@ public class TrunkingSignalingBlockFactory {
 
   private static final Logger log = LoggerFactory.getLogger(TrunkingSignalingBlockFactory.class);
 
-  public static final int OPCODE_NETWORK_STATUS = 59;
-
   private TrunkingSignalingBlock getBlockFor(byte[] bytes12) {
     int[] intBytes12 = new int[12];
     IntStream.range(0, 12).forEach(i -> intBytes12[i] = (bytes12[i] & 0xFF));
@@ -41,8 +40,17 @@ public class TrunkingSignalingBlockFactory {
     int     opCode      =  intBytes12[0] & 0x3F;
 
     switch (opCode) {
-      case OPCODE_NETWORK_STATUS:
+      case P25.OPCODE_GROUP_VOICE_CHAN_GRANT:
+        return new GroupVoiceChannelGrant(intBytes12, isLast, isEncrypted, opCode);
+
+      case P25.OPCODE_ID_UPDATE_VUHF:
+        return new IdUpdateVuhf(intBytes12, isLast, isEncrypted, opCode);
+
+      case P25.OPCODE_NETWORK_STATUS:
         return new NetworkStatusBroadcastMessage(intBytes12, isLast, isEncrypted, opCode);
+
+      case P25.OPCODE_ID_UPDATE_NO_VUHF:
+        return new IdUpdateNoVuhf(intBytes12, isLast, isEncrypted, opCode);
 
       default:
         return new TrunkingSignalingBlock(isLast, isEncrypted, opCode);

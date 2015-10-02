@@ -29,6 +29,8 @@ public class TrunkingSignalingBlock implements Copyable<TrunkingSignalingBlock> 
     this.isLast      = isLast;
     this.isEncrypted = isEncrypted;
     this.opCode      = opCode;
+
+    // todo: manufacturer id field
   }
 
   public boolean isLast() {

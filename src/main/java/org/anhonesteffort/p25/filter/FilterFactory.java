@@ -68,11 +68,7 @@ public class FilterFactory {
       throw new IllegalArgumentException("passband must be <= (channel rate / 4)");
 
     int decimation = (int) (sourceRate / channelRate);
-
-    return new ComplexNumberFirstOrderCicDecimatingFilter(
-        decimation,
-        getCicCompensation(channelRate, passbandStop, stopbandStart, 1)
-    );
+    return new ComplexNumberFirstOrderCicDecimatingFilter(decimation);
   }
 
   public static RateChangeFilter<ComplexNumber> getCicInterpolate(long sourceRate,
@@ -86,11 +82,7 @@ public class FilterFactory {
       throw new IllegalArgumentException("passband must be <= (source rate / 4)");
 
     int interpolation = (int) (channelRate / sourceRate);
-
-    return new ComplexNumberFirstOrderCicInterpolatingFilter(
-        interpolation,
-        getCicCompensation(channelRate, passbandStop, stopbandStart, 1)
-    );
+    return new ComplexNumberFirstOrderCicInterpolatingFilter(interpolation);
   }
 
   public static RateChangeFilter<ComplexNumber> getCicResampler(long sourceRate,
@@ -106,15 +98,11 @@ public class FilterFactory {
 
     int[] factors = FilterUtil.getInterpolationAndDecimation(sourceRate, channelRate, maxRateDiff);
 
-    RateChangeFilter<ComplexNumber> interpolation = new ComplexNumberFirstOrderCicInterpolatingFilter(
-        factors[0],
-        getCicCompensation(channelRate, passbandStop, stopbandStart, 1)
-    );
+    RateChangeFilter<ComplexNumber> interpolation =
+        new ComplexNumberFirstOrderCicInterpolatingFilter(factors[0]);
 
-    RateChangeFilter<ComplexNumber> decimation = new ComplexNumberFirstOrderCicDecimatingFilter(
-        factors[1],
-        getCicCompensation(channelRate, passbandStop, stopbandStart, 1)
-    );
+    RateChangeFilter<ComplexNumber> decimation =
+        new ComplexNumberFirstOrderCicDecimatingFilter(factors[1]);
 
     return new ComplexNumberResamplingFilter(interpolation, decimation);
   }

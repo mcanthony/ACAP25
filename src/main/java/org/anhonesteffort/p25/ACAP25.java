@@ -19,6 +19,7 @@ package org.anhonesteffort.p25;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import org.anhonesteffort.p25.protocol.ControlChannelCapture;
 import org.anhonesteffort.p25.protocol.ControlChannelQualifier;
 import org.anhonesteffort.p25.protocol.P25Channel;
 import org.anhonesteffort.p25.protocol.P25ChannelSpec;
@@ -39,13 +40,14 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 public class ACAP25 implements Runnable {
 
   private static final double DC_OFFSET_HZ = 100000d;
 
-  private static final Logger          log  = LoggerFactory.getLogger(ACAP25.class);
-  private static final ExecutorService pool = Executors.newFixedThreadPool(2);
+  private static final Logger          log                = LoggerFactory.getLogger(ACAP25.class);
+  private static final ExecutorService controlChannelPool = Executors.newFixedThreadPool(2);
 
   private final List<System>            systems;
   private final SamplesSourceController samplesController;
@@ -59,15 +61,17 @@ public class ACAP25 implements Runnable {
     for (Double channelFreq : site.getControlChannels()) {
       P25ChannelSpec          channelSpec      = new P25ChannelSpec(channelFreq);
       P25Channel              channel          = new P25Channel(channelSpec);
-      ControlChannelQualifier channelQualifier = new ControlChannelQualifier(pool, samplesController, channel, systemId, systemWacn);
+      ControlChannelQualifier channelQualifier = new ControlChannelQualifier(controlChannelPool, samplesController, channel, systemId, systemWacn);
 
       try {
 
-        Future<Boolean> channelQualified = pool.submit(channelQualifier);
-        if (channelQualified.get()) {
-          log.info("found active control channel at " + channelFreq +
+        Future<Optional<Double>> channelQualified = controlChannelPool.submit(channelQualifier);
+        Optional<Double>         controlFreq      = channelQualified.get();
+
+        if (controlFreq.isPresent()) {
+          log.info("found active control channel at " + controlFreq.get() +
                    " for site " + site.getName());
-          return Optional.of(channelFreq);
+          return Optional.of(controlFreq.get());
         }
 
       } catch (InterruptedException | ExecutionException e) {
@@ -81,6 +85,17 @@ public class ACAP25 implements Runnable {
 
   private void handleStartCapture(System system) {
     log.info("starting capture of system " + system.getName());
+
+    Double controlFreq = system.getSites()
+                               .stream().filter(site -> site.getActiveControlChannel().isPresent())
+                               .mapToDouble(site -> site.getActiveControlChannel().get())
+                               .findFirst().getAsDouble();
+
+    P25ChannelSpec        controlSpec    = new P25ChannelSpec(controlFreq);
+    P25Channel            controlChannel = new P25Channel(controlSpec);
+    ControlChannelCapture capture        = new ControlChannelCapture(samplesController, controlChannel);
+
+    controlChannelPool.submit(capture);
   }
 
   @Override
@@ -100,9 +115,19 @@ public class ACAP25 implements Runnable {
         )
     ).forEach(this::handleStartCapture);
 
-    pool.shutdownNow();
-    ConcurrencyUtils.shutdownThreadPoolAndAwaitTermination();
-    log.info("shutdown pool, should exit now");
+    try {
+
+      controlChannelPool.shutdown();
+      controlChannelPool.awaitTermination(120, TimeUnit.SECONDS);
+
+    } catch (InterruptedException e) {
+      log.warn("interrupted while awaiting shutdown", e);
+    } finally {
+      controlChannelPool.shutdownNow();
+      ConcurrencyUtils.shutdownThreadPoolAndAwaitTermination();
+    }
+
+    log.info("control channel pool shutdown, should exit now");
   }
 
   public static void main(String[] args) {

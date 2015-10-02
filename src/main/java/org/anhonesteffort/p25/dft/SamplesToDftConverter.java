@@ -37,8 +37,8 @@ public class SamplesToDftConverter extends SelfStartingSource<DftFrame, Sink<Dft
 
   private final LinkedBlockingQueue<float[]> consumedSamples = new LinkedBlockingQueue<>();
 
-  private final int             fftLength;
-  private final FloatFFT_1D     fft;
+  private final int         fftLength;
+  private final FloatFFT_1D fft;
 
   private ExecutorService executor;
   private float[]         queuedSamples;

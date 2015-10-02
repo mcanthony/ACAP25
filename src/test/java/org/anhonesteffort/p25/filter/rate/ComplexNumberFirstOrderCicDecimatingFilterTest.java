@@ -17,17 +17,17 @@
 
 package org.anhonesteffort.p25.filter.rate;
 
-import org.anhonesteffort.p25.filter.ComplexNumberFirFilter;
 import org.anhonesteffort.p25.filter.Filter;
 import org.anhonesteffort.p25.filter.FilterFactory;
+import org.anhonesteffort.p25.filter.FilterSinks;
 import org.anhonesteffort.p25.primitive.ComplexNumber;
+import org.anhonesteffort.p25.primitive.Oscillator;
 import org.anhonesteffort.p25.util.FrequencySweep;
 import org.junit.Test;
 
 import java.util.stream.LongStream;
 
 import static org.anhonesteffort.p25.filter.FilterSinks.CountAndSumSink;
-import static org.anhonesteffort.p25.filter.FilterSinks.ImpulseTrainSink;
 
 public class ComplexNumberFirstOrderCicDecimatingFilterTest {
 
@@ -37,10 +37,9 @@ public class ComplexNumberFirstOrderCicDecimatingFilterTest {
     final long DESIRED_RATE =   50;
     final int  DECIMATION   = (int) (SOURCE_RATE / DESIRED_RATE);
 
-    final CountAndSumSink        SINK     = new CountAndSumSink();
-    final ComplexNumberFirFilter CLEANUP  = new ComplexNumberFirFilter(new float[] {1f}, 1f);
+    final CountAndSumSink SINK = new CountAndSumSink();
     final ComplexNumberFirstOrderCicDecimatingFilter CIC =
-        new ComplexNumberFirstOrderCicDecimatingFilter(DECIMATION, CLEANUP);
+        new ComplexNumberFirstOrderCicDecimatingFilter(DECIMATION);
 
     CIC.addSink(SINK);
 
@@ -57,10 +56,9 @@ public class ComplexNumberFirstOrderCicDecimatingFilterTest {
     final long DESIRED_RATE =   50;
     final int  DECIMATION   = (int) (SOURCE_RATE / DESIRED_RATE);
 
-    final CountAndSumSink        SINK     = new CountAndSumSink();
-    final ComplexNumberFirFilter CLEANUP  = new ComplexNumberFirFilter(new float[] {1f}, 1f);
+    final CountAndSumSink SINK = new CountAndSumSink();
     final ComplexNumberFirstOrderCicDecimatingFilter CIC =
-        new ComplexNumberFirstOrderCicDecimatingFilter(DECIMATION, CLEANUP);
+        new ComplexNumberFirstOrderCicDecimatingFilter(DECIMATION);
 
     CIC.addSink(SINK);
 
@@ -77,28 +75,32 @@ public class ComplexNumberFirstOrderCicDecimatingFilterTest {
   }
 
   @Test
-  public void testImpulseTrain() {
-    final long    SOURCE_RATE     = 50l;
-    final long    DESIRED_RATE    = 25l;
-    final int     DECIMATION      = (int) (SOURCE_RATE / DESIRED_RATE);
-    final int     IMPULSE_PADDING = 10;
-    final float[] COEFFICIENTS    = new float[] {1f, 2f, 3f, 4f};
+  public void testSignalInterpolation() {
+    final long   SIGNAL_RATE         =  800;
+    final double SIGNAL_FREQ         =   80;
+    final long   DESIRED_RATE        =  400;
+    final int    SIGNAL_LENGTH       = (int) (SIGNAL_RATE  / SIGNAL_FREQ);
+    final int    DECM_SIGNAL_LENGTH  = (int) (DESIRED_RATE / SIGNAL_FREQ);
+    final int    DECIMATION          = (int) (SIGNAL_RATE / DESIRED_RATE);
 
-    final ImpulseTrainSink       SINK     = new ImpulseTrainSink(COEFFICIENTS, IMPULSE_PADDING, DECIMATION);
-    final ComplexNumberFirFilter CLEANUP  = new ComplexNumberFirFilter(COEFFICIENTS, 1f);
+    final Oscillator             SIGNAL            = new Oscillator(SIGNAL_RATE, SIGNAL_FREQ);
+    final FilterSinks.SignalSink SIGNAL_SINK       = new FilterSinks.SignalSink(SIGNAL_LENGTH);
+    final FilterSinks.SignalSink DECM_SIGNAL_SINK = new FilterSinks.SignalSink(DECM_SIGNAL_LENGTH);
+
     final ComplexNumberFirstOrderCicDecimatingFilter CIC =
-        new ComplexNumberFirstOrderCicDecimatingFilter(DECIMATION, CLEANUP);
+        new ComplexNumberFirstOrderCicDecimatingFilter(DECIMATION);
 
-    CIC.addSink(SINK);
+    LongStream.range(0, DESIRED_RATE * 2).forEach(l -> {
+      if (l == (SIGNAL_LENGTH))
+        CIC.addSink(DECM_SIGNAL_SINK);
 
-    LongStream.range(0, SOURCE_RATE).forEach(l -> {
-      if (l % IMPULSE_PADDING == 0)
-        CIC.consume(new ComplexNumber(1f, 1f));
-      else
-        CIC.consume(new ComplexNumber(0, 0));
+      ComplexNumber next = SIGNAL.next();
+      SIGNAL_SINK.consume(next);
+      CIC.consume(next);
     });
 
-    assert SINK.isOk();
+    assert SIGNAL_SINK.isOk();
+    assert DECM_SIGNAL_SINK.isOk();
   }
 
   @Test

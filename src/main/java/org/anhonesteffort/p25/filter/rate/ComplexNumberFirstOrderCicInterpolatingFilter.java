@@ -25,21 +25,16 @@ import java.util.stream.IntStream;
 
 public class ComplexNumberFirstOrderCicInterpolatingFilter extends RateChangeFilter<ComplexNumber> {
 
-  private final Filter<ComplexNumber> compensation;
   private final Filter<ComplexNumber> lastStage;
 
-  public ComplexNumberFirstOrderCicInterpolatingFilter(int interpolation, Filter<ComplexNumber> compensation) {
+  public ComplexNumberFirstOrderCicInterpolatingFilter(int interpolation) {
     super(interpolation, 1);
-
-    this.compensation = compensation;
-    lastStage         = new InterpolatingCicStage(interpolation, 1);
-
-    compensation.addSink(lastStage);
+    lastStage = new InterpolatingCicStage(interpolation, 1);
   }
 
   @Override
   public void consume(ComplexNumber element) {
-    compensation.consume(element);
+    lastStage.consume(element);
   }
 
   @Override

@@ -26,28 +26,29 @@ public class FilterUtil {
     int   interpolation = (int) (channelRate / commonFactor);
     int   decimation    = (int) (sourceRate / commonFactor);
     int[] bestFit       = new int[] {interpolation, decimation};
-    int   rateDiff      = 0;
 
-    while (rateDiff < maxRateDiff) {
-      rateDiff++;
+    int rateDiff, offset = 1;
+    while (offset < (Math.min(sourceRate, channelRate) / 2)) {
+      offset++;
 
-      commonFactor  = Util.greatestCommonFactor(sourceRate, channelRate + rateDiff);
-      interpolation = (int) ((channelRate + rateDiff) / commonFactor);
+      commonFactor  = Util.greatestCommonFactor(sourceRate, channelRate + offset);
+      interpolation = (int) ((channelRate + offset) / commonFactor);
       decimation    = (int) (sourceRate / commonFactor);
+      rateDiff      = (int) Math.abs(channelRate - ((sourceRate * interpolation) / decimation));
 
-      if (interpolation < bestFit[0])
-        bestFit = new int[] {interpolation, decimation};
+      if (rateDiff < maxRateDiff && interpolation < bestFit[0])
+        bestFit = new int[]{interpolation, decimation};
     }
-
-    while (rateDiff > 0) {
-      commonFactor  = Util.greatestCommonFactor(sourceRate - rateDiff, channelRate);
+    while (offset > 0) {
+      commonFactor  = Util.greatestCommonFactor(sourceRate - offset, channelRate);
       interpolation = (int) (channelRate / commonFactor);
-      decimation    = (int) ((sourceRate - rateDiff) / commonFactor);
+      decimation    = (int) ((sourceRate - offset) / commonFactor);
+      rateDiff      = (int) Math.abs(channelRate - ((sourceRate * interpolation) / decimation));
 
-      if (interpolation < bestFit[0])
-        bestFit = new int[] {interpolation, decimation};
+      if (rateDiff < maxRateDiff && interpolation < bestFit[0])
+        bestFit = new int[]{interpolation, decimation};
 
-      rateDiff--;
+      offset--;
     }
 
     return bestFit;

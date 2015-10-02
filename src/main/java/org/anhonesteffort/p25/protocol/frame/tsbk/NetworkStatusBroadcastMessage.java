@@ -17,10 +17,12 @@
 
 package org.anhonesteffort.p25.protocol.frame.tsbk;
 
-public class NetworkStatusBroadcastMessage extends TrunkingSignalingBlock {
+public class NetworkStatusBroadcastMessage extends TrunkingSignalingBlock implements DownlinkFreqProvider {
 
   private final int wacn;
   private final int systemId;
+  private final int channelId;
+  private final int channelNumber;
 
   public NetworkStatusBroadcastMessage(int[]   bytes12,
                                        boolean isLast,
@@ -29,20 +31,26 @@ public class NetworkStatusBroadcastMessage extends TrunkingSignalingBlock {
   {
     super(isLast, isEncrypted, opCode);
 
-    wacn     = (bytes12[3] << 12) + (bytes12[4] << 4) + (bytes12[5] >> 4);
-    systemId = ((bytes12[5] & 0x0F) << 8) + bytes12[6];
+    wacn          = (bytes12[3] << 12) + (bytes12[4] << 4) + (bytes12[5] >> 4);
+    systemId      = ((bytes12[5] & 0x0F) << 8) + bytes12[6];
+    channelId     = (bytes12[7] & 0xF0) >> 4;
+    channelNumber = ((bytes12[7] & 0x0F) << 8) + bytes12[8];
   }
 
   private NetworkStatusBroadcastMessage(boolean isLast,
                                         boolean isEncrypted,
                                         int     opCode,
                                         int     wacn,
-                                        int     systemId)
+                                        int     systemId,
+                                        int     channelId,
+                                        int     channelNumber)
   {
     super(isLast, isEncrypted, opCode);
 
-    this.wacn     = wacn;
-    this.systemId = systemId;
+    this.wacn          = wacn;
+    this.systemId      = systemId;
+    this.channelId     = channelId;
+    this.channelNumber = channelNumber;
   }
 
   public int getWacn() {
@@ -53,9 +61,24 @@ public class NetworkStatusBroadcastMessage extends TrunkingSignalingBlock {
     return systemId;
   }
 
+  public int getChannelId() {
+    return channelId;
+  }
+
+  public int getChannelNumber() {
+    return channelNumber;
+  }
+
+  @Override
+  public double getDownlinkFreq(IdUpdateBlock idBlock) {
+    return idBlock.getBaseFreq() + (channelNumber * idBlock.getChannelSpacing());
+  }
+
   @Override
   public NetworkStatusBroadcastMessage copy() {
-    return new NetworkStatusBroadcastMessage(isLast, isEncrypted, opCode, wacn, systemId);
+    return new NetworkStatusBroadcastMessage(
+        isLast, isEncrypted, opCode, wacn, systemId, channelId, channelNumber
+    );
   }
 
   @Override

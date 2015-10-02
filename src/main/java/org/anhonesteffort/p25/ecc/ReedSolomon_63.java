@@ -20,7 +20,12 @@
 
 package org.anhonesteffort.p25.ecc;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ReedSolomon_63 {
+
+  private final static Logger log = LoggerFactory.getLogger(ReedSolomon_63.class);
 
   private static final int[] rsGFexp = {
       1, 2, 4, 8, 16, 32, 3, 6, 12, 24, 48, 35, 5, 10, 20, 40,
@@ -37,6 +42,17 @@ public class ReedSolomon_63 {
   };
 
   public int decode(int nroots, int FirstInfo, int HB[]) {
+    try {
+
+      return decodeUnsafe(nroots, FirstInfo, HB);
+
+    } catch (ArrayIndexOutOfBoundsException e) {
+      log.error("suppressing index out of bounds exception :/");
+      return -1;
+    }
+  }
+
+  private int decodeUnsafe(int nroots, int FirstInfo, int HB[]) {
     assert HB.length == 63;
 
     int[] lambda = new int[18];

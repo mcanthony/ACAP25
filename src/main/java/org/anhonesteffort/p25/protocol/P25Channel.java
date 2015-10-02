@@ -55,15 +55,15 @@ public class P25Channel extends Source<DataUnit, Sink<DataUnit>>
 
   private static final Logger log            = LoggerFactory.getLogger(P25Channel.class);
   private static final Long   TARGET_RATE    = P25.SAMPLE_RATE;
-  private static final Long   MAX_RATE_DIFF  = 1000l;
+  private static final Long   MAX_RATE_DIFF  = 150l;
   private static final Long   SYMBOL_RATE    = P25.SYMBOL_RATE;
   private static final Long   PASSBAND_STOP  = P25.PASSBAND_STOP;
   private static final Long   STOPBAND_START = P25.STOPBAND_START;
   private static final int    ATTENUATION    = 40;
 
   private final Map<FilterType, List<DynamicSink<ComplexNumber>>> spies = new HashMap<>();
-  private final LinkedBlockingQueue<float[]> iqSampleQueue = new LinkedBlockingQueue<>(100);
-  private final Object freqTranslationLock = new Object();
+  private final LinkedBlockingQueue<float[]> iqSampleQueue = new LinkedBlockingQueue<>(10);
+  private final Object processChainLock = new Object();
   private final P25ChannelSpec spec;
 
   private ComplexNumberFrequencyTranslatingFilter freqTranslation;
@@ -85,7 +85,7 @@ public class P25Channel extends Source<DataUnit, Sink<DataUnit>>
     spies.put(FilterType.DEMODULATION, new LinkedList<>());
   }
 
-  public ChannelSpec getSpec() {
+  public P25ChannelSpec getSpec() {
     return spec;
   }
 
@@ -96,14 +96,14 @@ public class P25Channel extends Source<DataUnit, Sink<DataUnit>>
 
   @Override
   public void onSourceStateChange(Long sampleRate, Double frequency) {
-    synchronized (freqTranslationLock) {
+    synchronized (processChainLock) {
       RateChangeFilter<ComplexNumber> resampling = FilterFactory.getCicResampler(
           sampleRate, TARGET_RATE, MAX_RATE_DIFF, PASSBAND_STOP, STOPBAND_START
       );
       channelRate = (long) (sampleRate * resampling.getRateChange());
       iqSampleQueue.clear();
-      log.warn("source rate: " + sampleRate + ", channel rate: " + channelRate);
-      log.warn("interpolation: " + resampling.getInterpolation() + ", decimation: " + resampling.getDecimation());
+      log.info("source rate: " + sampleRate + ", channel rate: " + channelRate);
+      log.info("interpolation: " + resampling.getInterpolation() + ", decimation: " + resampling.getDecimation());
 
       freqTranslation   = new ComplexNumberFrequencyTranslatingFilter(sampleRate, frequency, spec.getCenterFrequency());
       baseband          = FilterFactory.getKaiserBessel(channelRate, PASSBAND_STOP, STOPBAND_START, ATTENUATION, 1f);
@@ -137,7 +137,7 @@ public class P25Channel extends Source<DataUnit, Sink<DataUnit>>
 
   @Override
   public void addSink(Sink<DataUnit> sink) {
-    synchronized (freqTranslationLock) {
+    synchronized (processChainLock) {
       super.addSink(sink);
       framer.addSink(sink);
     }
@@ -145,14 +145,14 @@ public class P25Channel extends Source<DataUnit, Sink<DataUnit>>
 
   @Override
   public void removeSink(Sink<DataUnit> sink) {
-    synchronized (freqTranslationLock) {
+    synchronized (processChainLock) {
       super.removeSink(sink);
       framer.removeSink(sink);
     }
   }
 
   public void addFilterSpy(FilterType type, DynamicSink<ComplexNumber> sink) {
-    synchronized (freqTranslationLock) {
+    synchronized (processChainLock) {
       switch (type) {
         case TRANSLATION:
           freqTranslation.addSink(sink);
@@ -177,7 +177,7 @@ public class P25Channel extends Source<DataUnit, Sink<DataUnit>>
   }
 
   public void removeFilterSpy(FilterType type, DynamicSink<ComplexNumber> sink) {
-    synchronized (freqTranslationLock) {
+    synchronized (processChainLock) {
       switch (type) {
         case TRANSLATION:
           freqTranslation.removeSink(sink);
@@ -205,7 +205,7 @@ public class P25Channel extends Source<DataUnit, Sink<DataUnit>>
     if (!iqSampleQueue.offer(samples.getSamples())) {
       iqSampleQueue.clear();
       iqSampleQueue.offer(samples.getSamples());
-      log.warn("sample queue has overflowed");
+      log.warn("sample queue for channel " + spec + " has overflowed");
     }
   }
 
@@ -230,15 +230,17 @@ public class P25Channel extends Source<DataUnit, Sink<DataUnit>>
 
       Stream.generate(this).forEach(samples -> {
         if (Thread.currentThread().isInterrupted())
-          throw new StreamInterruptedException("stopping");
+          throw new StreamInterruptedException("interrupted while reading from ComplexNumber stream");
 
-        synchronized (freqTranslationLock) {
+        synchronized (processChainLock) {
           samples.forEach(freqTranslation::consume);
         }
       });
 
     } catch (StreamInterruptedException e) {
-      log.debug("sample consume stream interrupted, assuming intended shutdown");
+      log.debug("channel " + spec + " interrupted, assuming execution was canceled");
+    } finally {
+      iqSampleQueue.clear();
     }
 
     return null;

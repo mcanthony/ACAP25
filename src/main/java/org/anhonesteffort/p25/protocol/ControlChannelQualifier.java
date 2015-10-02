@@ -17,103 +17,105 @@
 
 package org.anhonesteffort.p25.protocol;
 
-import org.anhonesteffort.p25.LoggingDataUnitSink;
-import org.anhonesteffort.p25.audio.ImbeAudioOutput;
-import org.anhonesteffort.p25.plot.SpectrumFrame;
-import org.anhonesteffort.p25.filter.SampleToSamplesConverter;
-import org.anhonesteffort.p25.plot.ConstellationFrame;
+import org.anhonesteffort.p25.Sink;
+import org.anhonesteffort.p25.protocol.frame.DataUnit;
+import org.anhonesteffort.p25.protocol.frame.Duid;
+import org.anhonesteffort.p25.protocol.frame.TrunkingSignalingDataUnit;
+import org.anhonesteffort.p25.protocol.frame.tsbk.IdUpdateBlock;
+import org.anhonesteffort.p25.protocol.frame.tsbk.NetworkStatusBroadcastMessage;
+import org.anhonesteffort.p25.protocol.frame.tsbk.TrunkingSignalingBlock;
 import org.anhonesteffort.p25.sample.SamplesSourceController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sound.sampled.LineUnavailableException;
-import java.awt.event.WindowEvent;
+import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
-public class ControlChannelQualifier implements Callable<Boolean> {
+public class ControlChannelQualifier implements Callable<Optional<Double>>, Sink<DataUnit> {
 
   private static final Logger log = LoggerFactory.getLogger(ControlChannelQualifier.class);
 
+  private static final long QUALIFY_TIMEOUT_MS = 10000;
+
+  private final ChannelIdUpdateBlockMap channelIdMap = new ChannelIdUpdateBlockMap();
+
   private final ExecutorService         pool;
-  private final SamplesSourceController samplesController;
+  private final SamplesSourceController samples;
   private final P25Channel              channel;
   private final Integer                 systemId;
   private final Integer                 systemWacn;
 
+  private Future<Void>     channelFuture = null;
+  private Optional<Double> controlFreq   = Optional.empty();
+
   public ControlChannelQualifier(ExecutorService         pool,
-                                 SamplesSourceController samplesController,
+                                 SamplesSourceController samples,
                                  P25Channel              channel,
                                  Integer                 systemId,
                                  Integer                 systemWacn)
   {
-    this.pool              = pool;
-    this.samplesController = samplesController;
-    this.channel           = channel;
-    this.systemId          = systemId;
-    this.systemWacn        = systemWacn;
+    this.pool       = pool;
+    this.samples    = samples;
+    this.channel    = channel;
+    this.systemId   = systemId;
+    this.systemWacn = systemWacn;
+  }
+
+  private void processTrunkStatus(NetworkStatusBroadcastMessage status) {
+    if (status.getWacn() == systemWacn && status.getSystemId() == systemId) {
+      Optional<IdUpdateBlock> idUpdate = channelIdMap.getBlockForId(status.getChannelId());
+
+      if (idUpdate.isPresent()) {
+        controlFreq = Optional.of(status.getDownlinkFreq(idUpdate.get()));
+        channelFuture.cancel(true);
+      } else {
+        controlFreq = Optional.of(channel.getSpec().getCenterFrequency());
+      }
+    }
   }
 
   @Override
-  public Boolean call() throws Exception {
-    if (!samplesController.configureSourceForSink(channel)) {
-      log.info("potential control channel " + channel.getSpec() + " is out of tunable range");
-      return false;
+  public void consume(DataUnit element) {
+    if (!element.isIntact())
+      return;
+
+    if (element.getNid().getDuid().getId() == Duid.ID_TRUNK_SIGNALING) {
+      TrunkingSignalingDataUnit        trunkSignaling = (TrunkingSignalingDataUnit) element;
+      Optional<TrunkingSignalingBlock> trunkStatus    = trunkSignaling.getFirstOf(P25.OPCODE_NETWORK_STATUS);
+
+      trunkSignaling.getBlocks().forEach(channelIdMap::consume);
+      if (trunkStatus.isPresent())
+        processTrunkStatus((NetworkStatusBroadcastMessage) trunkStatus.get());
+    }
+  }
+
+  @Override
+  public Optional<Double> call() throws Exception {
+    if (!samples.configureSourceForSink(channel)) {
+      log.warn("potential control channel " + channel.getSpec() + " is out of tunable range");
+      return Optional.empty();
     }
 
-    Future<Void>             channelFuture      = pool.submit(channel);
-    SpectrumFrame            spectrumFrame      = new SpectrumFrame();
-    ConstellationFrame       constellationFrame = new ConstellationFrame();
-    SampleToSamplesConverter hack               = new SampleToSamplesConverter();
-    LoggingDataUnitSink      debugSink          = new LoggingDataUnitSink();
-    ImbeAudioOutput          audioOutput        = null;
-
-    hack.addSink(spectrumFrame);
-    channel.addFilterSpy(P25Channel.FilterType.BASEBAND, hack);
-    channel.addFilterSpy(P25Channel.FilterType.DEMODULATION, constellationFrame);
-    channel.addSink(debugSink);
+    channel.addSink(this);
+    channelFuture = pool.submit(channel);
 
     try {
 
-      audioOutput = new ImbeAudioOutput();
-      channel.addSink(audioOutput);
+      channelFuture.get(QUALIFY_TIMEOUT_MS, TimeUnit.MILLISECONDS);
 
-    } catch (ReflectiveOperationException e) {
-      log.warn("unable to load jmbe library, audio playback will not work", e);
-    } catch (LineUnavailableException e) {
-      log.warn("unable to open audio output, audio playback will not work", e);
-    }
-
-    spectrumFrame.setTitle("channel: " + channel.getSpec().getCenterFrequency());
-    spectrumFrame.setSize(400, 300);
-    spectrumFrame.setVisible(true);
-
-    constellationFrame.setTitle("channel: " + channel.getSpec().getCenterFrequency());
-    constellationFrame.setSize(300, 300);
-    constellationFrame.setLocationRelativeTo(null);
-    constellationFrame.setVisible(true);
-
-    try {
-
-      Thread.sleep(30000);
-
-    } finally {
-      if (audioOutput != null) {
-        channel.removeSink(audioOutput);
-        audioOutput.stop();
-      }
-
-      channel.removeSink(debugSink);
-      channel.removeFilterSpy(P25Channel.FilterType.BASEBAND, hack);
-      channel.removeFilterSpy(P25Channel.FilterType.DEMODULATION, constellationFrame);
+    } catch (CancellationException | TimeoutException e) { }
+    finally {
+      channel.removeSink(this);
       channelFuture.cancel(true);
-      samplesController.removeSink(channel);
-      constellationFrame.dispatchEvent(new WindowEvent(constellationFrame, WindowEvent.WINDOW_CLOSING));
-      spectrumFrame.dispatchEvent(new WindowEvent(spectrumFrame, WindowEvent.WINDOW_CLOSING));
+      samples.removeSink(channel);
     }
 
-    return false;
+    return controlFreq;
   }
 
 }
