@@ -33,9 +33,12 @@ public class P25 {
 
   public static final int NID_LENGTH = 64;
 
-  public static final int OPCODE_GROUP_VOICE_CHAN_GRANT = 0x00;
-  public static final int OPCODE_ID_UPDATE_VUHF         = 0x34;
-  public static final int OPCODE_NETWORK_STATUS         = 0x3B;
-  public static final int OPCODE_ID_UPDATE_NO_VUHF      = 0x3D;
+  public static final int LCO_GROUP_VOICE_USER  = 0X00;
+  public static final int LCO_UNIT_TO_UNIT_USER = 0x03;
+
+  public static final int TSBK_GROUP_VOICE_CHAN_GRANT = 0x00;
+  public static final int TSBK_ID_UPDATE_VUHF         = 0x34;
+  public static final int TSBK_NETWORK_STATUS         = 0x3B;
+  public static final int TSBK_ID_UPDATE_NO_VUHF      = 0x3D;
 
 }

@@ -39,10 +39,11 @@ public class LogicalLinkDataUnit1 extends LogicalLinkDataUnit {
 
   private LogicalLinkDataUnit1(Nid                 nid,
                                DiBitByteBufferSink sink,
+                               byte[][]            voiceCodeWords,
                                LinkControlWord     linkControlWord,
                                boolean             intact)
   {
-    super(nid, sink);
+    super(nid, sink, voiceCodeWords);
 
     this.linkControlWord = linkControlWord;
     this.intact          = intact;
@@ -60,7 +61,7 @@ public class LogicalLinkDataUnit1 extends LogicalLinkDataUnit {
   @Override
   public DataUnit copy() {
     return new LogicalLinkDataUnit1(
-        nid, sink.copy(), linkControlWord, intact
+        nid, sink.copy(), voiceCodeWords, linkControlWord, intact
     );
   }
 

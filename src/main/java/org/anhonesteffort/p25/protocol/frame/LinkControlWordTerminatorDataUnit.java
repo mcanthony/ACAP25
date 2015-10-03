@@ -23,6 +23,7 @@ public class LinkControlWordTerminatorDataUnit extends DataUnit {
 
   public LinkControlWordTerminatorDataUnit(Nid nid, DiBitByteBufferSink sink) {
     super(nid, sink);
+    // todo: parse link control word
   }
 
   @Override

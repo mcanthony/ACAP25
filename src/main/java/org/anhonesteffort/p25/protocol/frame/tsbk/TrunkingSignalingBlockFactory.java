@@ -40,16 +40,16 @@ public class TrunkingSignalingBlockFactory {
     int     opCode      =  intBytes12[0] & 0x3F;
 
     switch (opCode) {
-      case P25.OPCODE_GROUP_VOICE_CHAN_GRANT:
+      case P25.TSBK_GROUP_VOICE_CHAN_GRANT:
         return new GroupVoiceChannelGrant(intBytes12, isLast, isEncrypted, opCode);
 
-      case P25.OPCODE_ID_UPDATE_VUHF:
+      case P25.TSBK_ID_UPDATE_VUHF:
         return new IdUpdateVuhf(intBytes12, isLast, isEncrypted, opCode);
 
-      case P25.OPCODE_NETWORK_STATUS:
+      case P25.TSBK_NETWORK_STATUS:
         return new NetworkStatusBroadcastMessage(intBytes12, isLast, isEncrypted, opCode);
 
-      case P25.OPCODE_ID_UPDATE_NO_VUHF:
+      case P25.TSBK_ID_UPDATE_NO_VUHF:
         return new IdUpdateNoVuhf(intBytes12, isLast, isEncrypted, opCode);
 
       default:

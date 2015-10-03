@@ -33,7 +33,7 @@ public class LogicalLinkDataUnit2 extends LogicalLinkDataUnit {
     ReedSolomon_24_16_9 reedSolomon = new ReedSolomon_24_16_9();
     int                 rsResult    = reedSolomon.decode(rsHexbits24);
 
-    messageIndicator = new byte[0];
+    messageIndicator = new byte[0]; // todo
     algorithmId      = (rsHexbits24[12] << 2) + (rsHexbits24[13] >> 4);
     keyId            = ((rsHexbits24[13] & 0x0F) << 12) + (rsHexbits24[14] << 6) + rsHexbits24[15];
     intact           = rsResult >= 0;
@@ -41,12 +41,13 @@ public class LogicalLinkDataUnit2 extends LogicalLinkDataUnit {
 
   private LogicalLinkDataUnit2(Nid                 nid,
                                DiBitByteBufferSink sink,
+                               byte[][]            voiceCodeWords,
                                byte[]              messageIndicator,
                                int                 algorithmId,
                                int                 keyId,
                                boolean             intact)
   {
-    super(nid, sink);
+    super(nid, sink, voiceCodeWords);
 
     this.messageIndicator = messageIndicator;
     this.algorithmId      = algorithmId;
@@ -74,7 +75,7 @@ public class LogicalLinkDataUnit2 extends LogicalLinkDataUnit {
   @Override
   public DataUnit copy() {
     return new LogicalLinkDataUnit2(
-        nid, sink.copy(), messageIndicator, algorithmId, keyId, intact
+        nid, sink.copy(), voiceCodeWords, messageIndicator, algorithmId, keyId, intact
     );
   }
 

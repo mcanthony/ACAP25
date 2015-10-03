@@ -35,6 +35,8 @@ public class NetworkStatusBroadcastMessage extends TrunkingSignalingBlock implem
     systemId      = ((bytes12[5] & 0x0F) << 8) + bytes12[6];
     channelId     = (bytes12[7] & 0xF0) >> 4;
     channelNumber = ((bytes12[7] & 0x0F) << 8) + bytes12[8];
+
+    // todo: system service class
   }
 
   private NetworkStatusBroadcastMessage(boolean isLast,

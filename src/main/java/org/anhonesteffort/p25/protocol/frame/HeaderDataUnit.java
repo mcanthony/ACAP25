@@ -48,7 +48,7 @@ public class HeaderDataUnit extends DataUnit {
     ReedSolomon_36_20_17 reedSolomon = new ReedSolomon_36_20_17();
     int                  rsResult    = reedSolomon.decode(hexBits);
 
-    messageIndicator = new byte[0];
+    messageIndicator = new byte[0]; // todo
     manufacturerId   = (hexBits[12] << 2) + (hexBits[13] >> 4);
     algorithmId      = ((hexBits[13] & 0x0F) << 4) + (hexBits[14] >> 2);
     keyId            = ((hexBits[14] & 0x03) << 14) + (hexBits[15] << 8) + (hexBits[16] << 2) + (hexBits[17] >> 4);

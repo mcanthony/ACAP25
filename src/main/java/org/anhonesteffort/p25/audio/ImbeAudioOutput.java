@@ -23,7 +23,6 @@ import org.anhonesteffort.p25.Sink;
 import org.anhonesteffort.p25.protocol.frame.DataUnit;
 import org.anhonesteffort.p25.protocol.frame.Duid;
 import org.anhonesteffort.p25.protocol.frame.LogicalLinkDataUnit;
-import org.anhonesteffort.p25.protocol.frame.VoiceCodeWord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,8 +76,8 @@ public class ImbeAudioOutput implements Sink<DataUnit> {
           return;
         }
 
-        for (VoiceCodeWord codeWord : lldu.getVoiceCodeWords()) {
-          byte[] audio = audioConverter.convert(codeWord.getVoiceParityInterleaved());
+        for (byte[] codeWord : lldu.getVoiceCodeWords()) {
+          byte[] audio = audioConverter.convert(codeWord);
           output.write(audio, 0, audio.length);
         }
     }

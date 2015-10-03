@@ -17,7 +17,7 @@
 
 package org.anhonesteffort.p25.protocol.frame.tsbk;
 
-public class ChannelGrantBlock extends TrunkingSignalingBlock {
+public abstract class ChannelGrantBlock extends TrunkingSignalingBlock implements DownlinkFreqProvider {
 
   protected final int channelId;
   protected final int channelNumber;
@@ -27,6 +27,7 @@ public class ChannelGrantBlock extends TrunkingSignalingBlock {
 
     channelId     = (bytes12[3] & 0xF0) >> 4;
     channelNumber = ((bytes12[3] & 0x0F) << 8) + bytes12[4];
+    // todo: service options
   }
 
   protected ChannelGrantBlock(boolean isLast,
@@ -47,11 +48,6 @@ public class ChannelGrantBlock extends TrunkingSignalingBlock {
 
   public int getChannelNumber() {
     return channelNumber;
-  }
-
-  @Override
-  public ChannelGrantBlock copy() {
-    return new ChannelGrantBlock(isLast, isEncrypted, opCode, channelId, channelNumber);
   }
 
 }

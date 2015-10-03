@@ -88,7 +88,7 @@ public class ControlChannelCapture implements Callable<Void> {
           channelIdMap.consume(trunkingBlock);
 
           switch (trunkingBlock.getOpCode()) {
-            case P25.OPCODE_GROUP_VOICE_CHAN_GRANT:
+            case P25.TSBK_GROUP_VOICE_CHAN_GRANT:
               processVoiceChannelGrant((GroupVoiceChannelGrant) trunkingBlock);
               break;
           }

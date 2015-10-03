@@ -77,15 +77,6 @@ public class Duid {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o)                               return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
-    Duid duid = (Duid) o;
-    return id == duid.id && bitLength == duid.bitLength;
-  }
-
-  @Override
   public String toString() {
     return "[" + id + "i:" + bitLength + "b]";
   }

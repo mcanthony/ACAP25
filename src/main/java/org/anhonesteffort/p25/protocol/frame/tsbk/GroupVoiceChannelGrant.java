@@ -17,7 +17,7 @@
 
 package org.anhonesteffort.p25.protocol.frame.tsbk;
 
-public class GroupVoiceChannelGrant extends ChannelGrantBlock implements DownlinkFreqProvider {
+public class GroupVoiceChannelGrant extends ChannelGrantBlock {
 
   private final int groupAddress;
   private final int sourceAddress;

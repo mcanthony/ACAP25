@@ -30,11 +30,14 @@ public abstract class LogicalLinkDataUnit extends DataUnit {
       0, 144, 328, 512, 696, 880, 1064, 1248, 1424
   };
 
-  protected final int[]           rsHexbits24    = new int[24];
-  protected final VoiceCodeWord[] voiceCodeWords = new VoiceCodeWord[9];
+  protected final int[]    rsHexbits24;
+  protected final byte[][] voiceCodeWords;
 
   public LogicalLinkDataUnit(Nid nid, DiBitByteBufferSink sink) {
     super(nid, sink);
+
+    rsHexbits24    = new int[24];
+    voiceCodeWords = new byte[9][];
 
     Hamming_10_6_3 hamming  = new Hamming_10_6_3();
     byte[]         bytes    = sink.getBytes().array();
@@ -58,13 +61,19 @@ public abstract class LogicalLinkDataUnit extends DataUnit {
 
     int voiceCwCount = 0;
     for (int bitIndex : VOICE_CODE_WORD_INDEXES) {
-      voiceCodeWords[voiceCwCount++] = new VoiceCodeWord(
-          bitSet.get(bitIndex, bitIndex + 144).toByteArray()
-      );
+      voiceCodeWords[voiceCwCount++] = bitSet.get(bitIndex, bitIndex + 144).toByteArray();
     }
+
+    // todo: parse low speed data
   }
 
-  public VoiceCodeWord[] getVoiceCodeWords() {
+  protected LogicalLinkDataUnit(Nid nid, DiBitByteBufferSink sink, byte[][] voiceCodeWords) {
+    super(nid, sink);
+    this.rsHexbits24    = null;
+    this.voiceCodeWords = voiceCodeWords;
+  }
+
+  public byte[][] getVoiceCodeWords() {
     return voiceCodeWords;
   }
 

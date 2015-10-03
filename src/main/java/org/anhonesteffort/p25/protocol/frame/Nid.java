@@ -60,15 +60,6 @@ public class Nid {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o)                               return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
-    Nid nid = (Nid) o;
-    return nac == nid.nac && duid.equals(nid.duid) && intact == nid.intact;
-  }
-
-  @Override
   public String toString() {
     return "[duid: " + duid.toString() + ", nac: " + nac + "]";
   }

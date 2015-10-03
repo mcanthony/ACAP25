@@ -35,8 +35,8 @@ public class ChannelIdUpdateBlockMap implements Sink<TrunkingSignalingBlock> {
   @Override
   public void consume(TrunkingSignalingBlock element) {
     switch (element.getOpCode()) {
-      case P25.OPCODE_ID_UPDATE_VUHF:
-      case P25.OPCODE_ID_UPDATE_NO_VUHF:
+      case P25.TSBK_ID_UPDATE_VUHF:
+      case P25.TSBK_ID_UPDATE_NO_VUHF:
         IdUpdateBlock idUpdateBlock = (IdUpdateBlock) element;
         idMap.put(idUpdateBlock.getId(), idUpdateBlock);
         break;

@@ -20,6 +20,7 @@ package org.anhonesteffort.p25.protocol;
 import org.anhonesteffort.p25.audio.ImbeAudioOutput;
 import org.anhonesteffort.p25.plot.ConstellationFrame;
 import org.anhonesteffort.p25.protocol.frame.DataUnit;
+import org.anhonesteffort.p25.protocol.frame.Duid;
 import org.anhonesteffort.p25.sample.SamplesSourceController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +57,13 @@ public class VoiceChannelCapture implements Runnable, ActionListener {
 
   private void processDataUnit(DataUnit dataUnit) {
     dataProcessed = true;
+
+    switch (dataUnit.getNid().getDuid().getId()) {
+      case Duid.ID_TERMINATOR_W_LINK:
+      case Duid.ID_TERMINATOR_WO_LINK:
+        channelFuture.cancel(true);
+        break;
+    }
   }
 
   @Override

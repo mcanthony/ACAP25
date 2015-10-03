@@ -86,7 +86,7 @@ public class ControlChannelQualifier implements Callable<Optional<Double>>, Sink
 
     if (element.getNid().getDuid().getId() == Duid.ID_TRUNK_SIGNALING) {
       TrunkingSignalingDataUnit        trunkSignaling = (TrunkingSignalingDataUnit) element;
-      Optional<TrunkingSignalingBlock> trunkStatus    = trunkSignaling.getFirstOf(P25.OPCODE_NETWORK_STATUS);
+      Optional<TrunkingSignalingBlock> trunkStatus    = trunkSignaling.getFirstOf(P25.TSBK_NETWORK_STATUS);
 
       trunkSignaling.getBlocks().forEach(channelIdMap::consume);
       if (trunkStatus.isPresent())
